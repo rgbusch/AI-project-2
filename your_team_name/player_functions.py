@@ -115,6 +115,12 @@ def node_move(prev_node, stack_num, move,colour):
 
 def state_search(current_node,colour,explode):
     listOfNodes = []
+    
+    if colour == "white":
+        opp_colour = "black"
+    else:
+        opp_colour = "white"
+
     if current_node.state[colour]:
         for stack_num in range(len(current_node.state[colour])) :
             # generate all possible nodes for single stack
@@ -123,9 +129,17 @@ def state_search(current_node,colour,explode):
             
             # explode move
             if explode == True:
-                boom_state = boom(current_node.state, stack_num, colour)
-                temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
-                listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
+
+                #reducing branching factor by checking if there are any other opponent's tokens within explosion range
+                #explosion states creation would be unnessary if it doesnt destroy enemy tokens
+                for x in range(current_node.state[colour][stack_num][1]-1,current_node.state[colour][stack_num][1]+1):
+                    for y in range(current_node.state[colour][stack_num][2]-1,current_node.state[colour][stack_num][2]+1):
+                        if (current_node.state[opp_colour]):
+                            for tokens in current_node.state[opp_colour]:
+                                if tokens[1] == x and tokens[2] == y:
+                                    boom_state = boom(current_node.state, stack_num, colour)
+                                    temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
+                                    listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
             for i in range(1,n+1):
                     # move up by ith tokens
                 if in_bounds(current_node.state, stack_num, [i,0,i],colour) :
