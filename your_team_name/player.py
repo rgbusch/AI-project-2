@@ -2,13 +2,14 @@ import math as m
 from your_team_name import player_functions as pf
 
 class Node:
-    def __init__(self,state=None,child = [],action = None,move = None,depth = None):
+    def __init__(self,state=None,child = [],action = None,move = None,depth = None,weights = None):
 
         self.state = state
         self.child = child
         self.move = move
         self.action = action
         self.depth = depth
+        self.weights = weights
 
     
     def hasChild(self):
@@ -59,7 +60,9 @@ class Player:
             minimax_tree = Tree(root_node,0,2)
             self.minimax_tree = minimax_tree
             #white always start first
+            
             initial_possible_moves = pf.state_search(minimax_tree.root,'white',False)
+            
             for child in initial_possible_moves:
                 child.depth = 1
             minimax_tree.root.child = initial_possible_moves
@@ -156,8 +159,8 @@ class Player:
                     list[2] = action[3][1] - j[2]
             self.minimax_tree.root.state = initial_state
             self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, list, 'white')
-        
             self.minimax_tree.root.child = pf.state_search(self.minimax_tree.root, 'black', False)
+
             child_set = True
         
         for node in self.minimax_tree.root.child :

@@ -5,12 +5,13 @@ from cgi import valid_boundary
 
 
 class Node:
-    def __init__(self, state=None,child = [],action = None,move = None,depth =None):
+    def __init__(self, state=None,child = [],action = None,move = None,depth =None,weights = None):
         self.state = state
         self.child = child
         self.move = move
         self.action = action
         self.depth = depth
+        self.weights = weights
 
 def branch_approximation(current_node,colour):
     possible_moves = 0
@@ -34,9 +35,17 @@ def evaluation(current_node,colour):
     sides = ["white","black"]
     temp_dict = {}
     for x in sides:
-        temp_dict[x] = 0
+        weights = []
         for y in range(len(current_node.state[x])):
-            temp_dict[x] += current_node.state[x][y][0]
+            #assigning more weights to stack -> prefer stacking as it opens up more options
+            if current_node.state[x][y][0] > 1:
+                weights.append(current_node.state[x][y][0]*(13/12))
+            else:
+                weights.append(1)
+        if x == colour:
+            current_node.weights = weights
+        temp_dict[x] = sum(weights)
+
     if colour == "white":
         return temp_dict["white"]-temp_dict["black"]
     else:
