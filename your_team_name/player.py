@@ -56,7 +56,7 @@ class Player:
 
 
             root_node = Node(initial_state,depth=0)
-            minimax_tree = Tree(root_node,0,3)
+            minimax_tree = Tree(root_node,0,2)
             self.minimax_tree = minimax_tree
             #white always start first
             initial_possible_moves = pf.state_search(minimax_tree.root,'white',False)
@@ -89,7 +89,7 @@ class Player:
                     
         else:
             root_node = Node(depth=0)
-            minimax_tree = Tree(root_node,0,3)
+            minimax_tree = Tree(root_node,0,2)
             self.minimax_tree = minimax_tree
 
 

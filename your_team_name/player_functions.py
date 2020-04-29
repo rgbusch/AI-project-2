@@ -12,6 +12,24 @@ class Node:
         self.action = action
         self.depth = depth
 
+def branch_approximation(current_node,colour):
+    possible_moves = 0
+    if (current_node.state[colour]):
+        for stack_num in range(len(current_node.state[colour])):
+            maximum_moves = current_node.state[colour][stack_num][0]*4 + 1
+            move_range = current_node.state[colour][stack_num][0]
+            x_loc = current_node.state[colour][stack_num][1]
+            y_loc = current_node.state[colour][stack_num][2]    
+            for x in range(-(move_range),move_range+1):
+                if (in_bounds(current_node.state,stack_num,[abs(x),0,y_loc+x],colour)) == False:
+                    maximum_moves -= 1
+                if (in_bounds(current_node.state,stack_num,[abs(x),x_loc+x,0],colour)) == False:
+                    maximum_moves -= 1
+            possible_moves += maximum_moves
+    return possible_moves
+
+
+
 def evaluation(current_node,colour):
     sides = ["white","black"]
     temp_dict = {}
