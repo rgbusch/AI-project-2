@@ -5,13 +5,14 @@ from cgi import valid_boundary
 
 
 class Node:
-    def __init__(self, state=None,child = [],action = None,move = None,depth =None,weights = None):
+    def __init__(self, state=None,child = [],action = None,move = None,depth =None):
         self.state = state
         self.child = child
         self.move = move
         self.action = action
         self.depth = depth
-        self.weights = weights
+
+ 
 
 def branch_approximation(current_node,colour):
     possible_moves = 0
@@ -31,27 +32,32 @@ def branch_approximation(current_node,colour):
 
 
 
-def evaluation(current_node,colour):
-    sides = ["white","black"]
+def evaluation(current_node,colour,weights):
+
     temp_dict = {}
-    for x in sides:
-        weights = []
-        for y in range(len(current_node.state[x])):
-            #assigning more weights to stack -> prefer stacking as it opens up more options
-            if current_node.state[x][y][0] > 1:
-                weights.append(current_node.state[x][y][0]*(13/12))
-            else:
-                weights.append(1)
-        if x == colour:
-            current_node.weights = weights
-        temp_dict[x] = sum(weights)
+    temp_node = copy.deepcopy(current_node)
+    for x in range(1,13):
+        white_count = 0
+        black_count = 0
+        for w_tokens in temp_node.state["white"]:
+            if w_tokens[0] == x:
+                white_count += 1
+                temp_node.state["white"].remove(w_tokens)
+        for b_tokens in temp_node.state["black"]:
+            if b_tokens[0] == x:
+                black_count += 1
+                temp_node.state["black"].remove(b_tokens)
+        if colour == "white":
+            temp_dict[x] = weights[x] * (white_count - black_count)
+        else:
+            temp_dict[x] = weights[x] * (black_count - white_count)
+    temp_sum = 0
+    for keys in temp_dict:
+        temp_sum += temp_dict[keys]
+    return temp_sum
 
-    if colour == "white":
-        return temp_dict["white"]-temp_dict["black"]
-    else:
-        return temp_dict["black"] - temp_dict["white"]
 
-def reward(current_node,colour):
+def reward(current_node,colour,weights):
     if colour == "white":
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
@@ -62,7 +68,7 @@ def reward(current_node,colour):
             if(not current_node.state['white']) :
                 return -1 #black != 0 white = 0
             else :
-                return m.tanh(evaluation(current_node, colour)) # black != 0 white != 0
+                return m.tanh(evaluation(current_node, colour,weights)) # black != 0 white != 0
     else : # colour = black
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
@@ -73,7 +79,7 @@ def reward(current_node,colour):
             if(not current_node.state['white']) :
                 return 1 #black != 0 white = 0
             else :
-                return m.tanh(evaluation(current_node, colour)) # black != 0 white != 0
+                return m.tanh(evaluation(current_node, colour,weights)) # black != 0 white != 0
     
 def in_bounds(state, stack_num, move,colour):
     if (state[colour][stack_num][1] + move[1] < 0) or (state[colour][stack_num][1] + move[1] > 7) :
@@ -186,17 +192,17 @@ def state_search(current_node,colour,explode):
 
 # we are maxPlayer hence starts with mPlayer = true, a = -1000, b = 1000
 # beta is the maximum score the minimizing player (opponent) can get
-def minimax(maxPlayer, current_node, alpha, beta, our_colour) : 
+def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights) : 
     maxNum = 1000
     minNum = -1000
     
     if len(current_node.child) == 0 :
-        return reward(current_node, our_colour), current_node
+        return reward(current_node, our_colour,weights), current_node
     
     if maxPlayer:
         best = minNum
         for child in current_node.child :
-            val, temp = minimax(False, child, alpha, beta, our_colour)
+            val, temp = minimax(False, child, alpha, beta, our_colour,weights)
             if(val > best) :
                 best = val
                 best_node = child
@@ -209,7 +215,7 @@ def minimax(maxPlayer, current_node, alpha, beta, our_colour) :
     else:
         best = maxNum
         for child in current_node.child :
-            val, temp = minimax(True, child, alpha, beta, our_colour)
+            val, temp = minimax(True, child, alpha, beta, our_colour,weights)
             if(val < best) :
                 best = val
                 best_node = child

@@ -1,15 +1,17 @@
 import math as m
 from your_team_name import player_functions as pf
 
+state_evaluation = []
+
 class Node:
-    def __init__(self,state=None,child = [],action = None,move = None,depth = None,weights = None):
+    def __init__(self,state=None,child = [],action = None,move = None,depth = None):
 
         self.state = state
         self.child = child
         self.move = move
         self.action = action
         self.depth = depth
-        self.weights = weights
+
 
     
     def hasChild(self):
@@ -19,10 +21,11 @@ class Node:
         self.child.append(child_node)
 
 class Tree:
-    def __init__(self,root = None,current_depth = None,depth = None):
+    def __init__(self,root = None,current_depth = None,depth = None,weights = None):
         self.root = root
         self.current_depth=current_depth
         self.depth = depth
+        self.weights = weights
     
     
 
@@ -42,8 +45,11 @@ class Player:
         """
         self.colour = colour 
         self.opening_moves = {}
-
         
+        f = open("weights.txt","w+")
+        temp_str = f.readline()
+        weights = temp_str.strip().split(",")
+
         #we make move first
         if colour =="white": 
 
@@ -57,7 +63,7 @@ class Player:
 
 
             root_node = Node(initial_state,depth=0)
-            minimax_tree = Tree(root_node,0,2)
+            minimax_tree = Tree(root_node,0,2,weights = weights)
             self.minimax_tree = minimax_tree
             #white always start first
             
@@ -92,7 +98,7 @@ class Player:
                     
         else:
             root_node = Node(depth=0)
-            minimax_tree = Tree(root_node,0,2)
+            minimax_tree = Tree(root_node,0,2,weights = weights)
             self.minimax_tree = minimax_tree
 
 
@@ -108,7 +114,7 @@ class Player:
         represented based on the spec's instructions for representing actions.
         """
         
-        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour)
+        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
 
         return best_node.action
         
