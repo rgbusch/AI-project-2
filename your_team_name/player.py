@@ -1,7 +1,7 @@
 import math as m
 from your_team_name import player_functions as pf
 
-state_evaluation = []
+state_reward = []
 
 class Node:
     def __init__(self,state=None,child = [],action = None,move = None,depth = None):
@@ -46,9 +46,13 @@ class Player:
         self.colour = colour 
         self.opening_moves = {}
         
-        f = open("weights.txt","w+")
-        temp_str = f.readline()
+        f = open("your_team_name/weights.txt","r")
+        
+        temp_str = f.read()
         weights = temp_str.strip().split(",")
+        for w in range(len(weights)):
+            weights[w] = float(weights[w])
+        f.close()
 
         #we make move first
         if colour =="white": 
@@ -63,7 +67,7 @@ class Player:
 
 
             root_node = Node(initial_state,depth=0)
-            minimax_tree = Tree(root_node,0,2,weights = weights)
+            minimax_tree = Tree(root_node,0,3,weights = weights)
             self.minimax_tree = minimax_tree
             #white always start first
             
@@ -98,7 +102,7 @@ class Player:
                     
         else:
             root_node = Node(depth=0)
-            minimax_tree = Tree(root_node,0,2,weights = weights)
+            minimax_tree = Tree(root_node,0,3,weights = weights)
             self.minimax_tree = minimax_tree
 
 
@@ -115,6 +119,8 @@ class Player:
         """
         
         score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
+
+
 
         return best_node.action
         

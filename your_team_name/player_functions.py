@@ -17,6 +17,7 @@ def weight_update(reward_score,learning_rate,lamda,weight):
     return_weight = []
     for x in range(len(weight)):
         second_part = 0
+        combined = 0
         for y in range(len(reward_score)-1):
             third_part = 0
             for z in range(y,len(reward_score)-1):
@@ -28,7 +29,7 @@ def weight_update(reward_score,learning_rate,lamda,weight):
             #sech can be represented by 1/cosh which cosh is included in the maths library
             sech_square = m.pow(1/m.cosh(weight[y]),2)
             second_part += fs * sech_square
-            combined = second_part * third_part
+            combined += second_part * third_part
         temp_weight = weight[x] + learning_rate * combined
         return_weight.append(temp_weight)
     return return_weight
@@ -57,15 +58,16 @@ def evaluation(current_node,colour,weights):
 
     temp_dict = {}
     temp_node = copy.deepcopy(current_node)
-    for x in range(1,13):
+
+    for x in range(len(weights)):
         white_count = 0
         black_count = 0
         for w_tokens in temp_node.state["white"]:
-            if w_tokens[0] == x:
+            if w_tokens[0] == x + 1:
                 white_count += 1
                 temp_node.state["white"].remove(w_tokens)
         for b_tokens in temp_node.state["black"]:
-            if b_tokens[0] == x:
+            if b_tokens[0] == x + 1:
                 black_count += 1
                 temp_node.state["black"].remove(b_tokens)
         if colour == "white":
@@ -73,8 +75,10 @@ def evaluation(current_node,colour,weights):
         else:
             temp_dict[x] = weights[x] * (black_count - white_count)
     temp_sum = 0
+    
     for keys in temp_dict:
         temp_sum += temp_dict[keys]
+
     return temp_sum
 
 
