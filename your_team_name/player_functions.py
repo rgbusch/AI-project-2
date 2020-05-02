@@ -190,8 +190,8 @@ def state_search(current_node,colour,explode):
 
                 #reducing branching factor by checking if there are any other opponent's tokens within explosion range
                 #explosion states creation would be unnessary if it doesnt destroy enemy tokens
-                for x in range(current_node.state[colour][stack_num][1]-1,current_node.state[colour][stack_num][1]+1):
-                    for y in range(current_node.state[colour][stack_num][2]-1,current_node.state[colour][stack_num][2]+1):
+                for x in range(current_node.state[colour][stack_num][1]-1,current_node.state[colour][stack_num][1]+2):
+                    for y in range(current_node.state[colour][stack_num][2]-1,current_node.state[colour][stack_num][2]+2):
                         if (current_node.state[opp_colour]):
                             for tokens in current_node.state[opp_colour]:
                                 if tokens[1] == x and tokens[2] == y:
@@ -250,3 +250,22 @@ def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights) :
                 break
         return best, best_node
 
+
+def generateMoves(root, maxDepth, curDepth, colour, explode) :
+    curNode = root
+    if colour == 'white' :
+        oppColour = 'black'
+    else :
+        oppColour = 'white'
+    while curDepth < maxDepth :
+        if len(curNode.child) > 0 :
+            curDepth += 1
+            for child in curNode.child :
+                generateMoves(child, maxDepth, curDepth, oppColour, explode)
+        else :
+            # check if game state is over
+            if curNode.state[colour] :
+                curNode.child = state_search(curNode, colour, explode)
+            else :
+                curDepth += 1
+    return 0

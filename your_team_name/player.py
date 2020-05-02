@@ -6,19 +6,19 @@ state_reward = []
 class Node:
     def __init__(self,state=None,child = [],action = None,move = None,depth = None):
 
-        self.state = state
+        self.state = state 
         self.child = child
         self.move = move
         self.action = action
         self.depth = depth
-
-
     
     def hasChild(self):
         return self.child
 
     def insertChild(self,child_node):
         self.child.append(child_node)
+
+
 
 class Tree:
     def __init__(self,root = None,current_depth = None,depth = None,weights = None):
@@ -27,24 +27,19 @@ class Tree:
         self.depth = depth
         self.weights = weights
     
-    
+    def getLeafNodes(self, node, leafs, colour, weights) :
+        if node is not None :
+            if len(node.child) == 0 :
+                leafs.append((node, pf.reward(node, colour))) # change to append weight too
+            for n in node.child :
+                self.getLeafNodes(n, leafs, colour, weights)
 
 
 
 class Player:
     def __init__(self, colour):
-        """
-        This method is called once at the beginning of the game to initialise
-        your player. You should use this opportunity to set up your own internal
-        representation of the game state, and any other information about the 
-        game state you would like to maintain for the duration of the game.
-
-        The parameter colour will be a string representing the player your 
-        program will play as (White or Black). The value will be one of the 
-        strings "white" or "black" correspondingly.
-        """
-        self.colour = colour 
-        self.opening_moves = {}
+        
+        self.colour = colour
         
         f = open("your_team_name/weights.txt","r")
         
@@ -54,141 +49,93 @@ class Player:
             weights[w] = float(weights[w])
         f.close()
 
-        #we make move first
-        if colour =="white": 
-
-            initial_state = {"white":[],"black":[]}
-            for i in range(8) :
-                if i != 2 and i != 5:
-                    for j in range(2):
-                        initial_state["white"].append([1,i,j])
-                    for k in range(6,8):
-                        initial_state["black"].append([1,i,k])
+        initial_state = {"white":[],"black":[]}
+        for i in range(8) :
+            if i != 2 and i != 5:
+                for j in range(2):
+                    initial_state["white"].append([1,i,j])
+                for k in range(6,8):
+                    initial_state["black"].append([1,i,k])
 
 
-            root_node = Node(initial_state,depth=0)
-            minimax_tree = Tree(root_node,0,3,weights = weights)
-            self.minimax_tree = minimax_tree
-            #white always start first
-            
-            initial_possible_moves = pf.state_search(minimax_tree.root,'white',False)
-            
-            for child in initial_possible_moves:
-                child.depth = 1
-            minimax_tree.root.child = initial_possible_moves
-            minimax_tree.current_depth += 1
-            current_nodes = minimax_tree.root.child
-
-            opponent_colour = "black"
-            
-            while minimax_tree.current_depth != minimax_tree.depth :
-                temp_list = []
-                if (current_nodes[0].depth % 2) == 0:
-                    for x in current_nodes:
-                        x.child = pf.state_search(x,colour,False)
-                        for y in x.child: # can save time if this for is in state_search
-                            y.depth = minimax_tree.current_depth + 1
-                        temp_list += x.child
-                    current_nodes = temp_list
-                    minimax_tree.current_depth += 1
-                else:
-                    for x in current_nodes:
-                        x.child = pf.state_search(x,opponent_colour,False)
-                        for y in x.child:
-                            y.depth = minimax_tree.current_depth + 1
-                        temp_list += x.child
-                    current_nodes = temp_list
-                    minimax_tree.current_depth += 1
-                    
-        else:
-            root_node = Node(depth=0)
-            minimax_tree = Tree(root_node,0,3,weights = weights)
-            self.minimax_tree = minimax_tree
+        root_node = Node(initial_state,depth=0)
+        minimax_tree = Tree(root_node,0,2, weights = weights)
+        self.minimax_tree = minimax_tree
+        
+        #if we start as white, generate moveset here  
+        if colour == "white" :
+            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False)
 
 
 
 
     def action(self):
-        """
-        This method is called at the beginning of each of your turns to request 
-        a choice of action from your program.
-
-        Based on the current state of the game, your player should select and 
-        return an allowed action to play on this turn. The action must be
-        represented based on the spec's instructions for representing actions.
-        """
         
         score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
 
-
-
         return best_node.action
         
-        
-        
-        
-        #return ("BOOM", (0, 0))
+
 
 
     def update(self, colour, action):
-        """
-        This method is called at the end of every turn (including your player’s 
-        turns) to inform your player about the most recent action. You should 
-        use this opportunity to maintain your internal representation of the 
-        game state and any other information about the game you are storing.
-
-        The parameter colour will be a string representing the player whose turn
-        it is (White or Black). The value will be one of the strings "white" or
-        "black" correspondingly.
-
-        The parameter action is a representation of the most recent action
-        conforming to the spec's instructions for representing actions.
-
-        You may assume that action will always correspond to an allowed action 
-        for the player colour (your method does not need to validate the action
-        against the game rules).
-        """
+        actionNotFound = True
+        # look for given action in current tree, and assign new root
         
-        # change root node to action node
-        if(self.minimax_tree.root.state == None) :
-            initial_state = {"white":[],"black":[]}
-            for i in range(8) :
-                if i != 2 and i != 5:
-                    for j in range(2):
-                        initial_state["white"].append([1,i,j])
-                    for k in range(6,8):
-                        initial_state["black"].append([1,i,k])
-                                    
-            for j in initial_state["white"] :
+        if len(self.minimax_tree.root.child) > 0 :
+            for node in self.minimax_tree.root.child :
+                if(node.action == action) :
+                    self.minimax_tree.root = node
+                    actionNotFound = False
+        # if action not found, recreate tree using root + action
+        # if starting as black, this will always occur after first white action
+        if actionNotFound :
+            for j in self.minimax_tree.root.state['white'] :
                 if j[1] == action[2][0] and j[2] == action[2][1] :
-                    print('here')
-                    print(j)
-                    print(action)
-                    stack_num = initial_state["white"].index(j)
-                    list = [None, None, None]
-                    list[0] = 1
-                    list[1] = action[3][0] - j[1]
-                    list[2] = action[3][1] - j[2]
-            self.minimax_tree.root.state = initial_state
-            self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, list, 'white')
-            self.minimax_tree.root.child = pf.state_search(self.minimax_tree.root, 'black', False)
+                    stack_num = self.minimax_tree.root.state["white"].index(j)
+                    move = [None, None, None]
+                    move[0] = 1
+                    move[1] = action[3][0] - j[1]
+                    move[2] = action[3][1] - j[2]
+            self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, move, 'white')
+            pf.generateMoves(self.minimax_tree.root, 2, 0, 'black', False)
 
-            child_set = True
-        
-        for node in self.minimax_tree.root.child :
-            if(node.action == action) :
-                self.minimax_tree.root = node
-                # maybe update all depths
-            
-            
         # if was our turn do nothing else, if was theirs generate new nodes
-        if(colour != self.colour) :
-            if(len(self.minimax_tree.root.child) == 0) :
-                self.minimax_tree.root.child = pf.state_search(self.minimax_tree.root, self.colour, True)
-            for x in self.minimax_tree.root.child :
-                if(len(x.child) == 0) :
-                    x.child = pf.state_search(x, colour, True)
-
+        if colour != self.colour :
+            depth = 0
+            approx1 = pf.branch_approximation(self.minimax_tree.root, colour)
+            approx2 = pf.branch_approximation(self.minimax_tree.root, self.colour)
+            approx = (approx1 + approx2)/2
+            if approx > 5 : # approx <= 5 if one node each can change to 3
+                while m.pow(approx, depth + 1) < 10000 : # 20000 gets max memory = 103MB
+                    depth += 1
+            else :
+                depth = 2
+                
+            #generate moves to desired depth
+            pf.generateMoves(self.minimax_tree.root, depth, 0, self.colour, True)
             
-        # TODO: Update state representation in response to action.
-        
+            available = 10000 - approx*depth
+            maxNodesToExplore = available/approx
+            """
+            if approx > 5 :
+                
+                listOfLeafs = []
+                self.minimax_tree.getLeafNodes(self.minimax_tree.root, listOfLeafs, self.colour, self.minimax_tree.weights)
+                listOfLeafs.sort(key = lambda x: x[1])
+                
+                # determine how many nodes to explore
+                if maxNodesToExplore > len(listOfLeafs) :
+                    nodesToExplore = len(listOfLeafs)
+                else :
+                    nodesToExplore = int(maxNodesToExplore)
+                if nodesToExplore > 250 :
+                    nodesToExplore = 250
+                
+                if len(listOfLeafs) > 0 : 
+                    for i in range(nodesToExplore) :
+                        if depth % 2 == 0 :
+                            pf.generateMoves(listOfLeafs[i][0], 1, 0, self.colour, True)
+                        else :
+                            pf.generateMoves(listOfLeafs[i][0], 1, 0, colour, True)
+        """
