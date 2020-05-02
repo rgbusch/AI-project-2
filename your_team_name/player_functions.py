@@ -12,6 +12,8 @@ class Node:
         self.action = action
         self.depth = depth
 
+ 
+
 def branch_approximation(current_node,colour):
     possible_moves = 0
     if (current_node.state[colour]):
@@ -30,19 +32,32 @@ def branch_approximation(current_node,colour):
 
 
 
-def evaluation(current_node,colour):
-    sides = ["white","black"]
-    temp_dict = {}
-    for x in sides:
-        temp_dict[x] = 0
-        for y in range(len(current_node.state[x])):
-            temp_dict[x] += current_node.state[x][y][0]
-    if colour == "white":
-        return temp_dict["white"]-temp_dict["black"]
-    else:
-        return temp_dict["black"] - temp_dict["white"]
+def evaluation(current_node,colour,weights):
 
-def reward(current_node,colour):
+    temp_dict = {}
+    temp_node = copy.deepcopy(current_node)
+    for x in range(1,13):
+        white_count = 0
+        black_count = 0
+        for w_tokens in temp_node.state["white"]:
+            if w_tokens[0] == x:
+                white_count += 1
+                temp_node.state["white"].remove(w_tokens)
+        for b_tokens in temp_node.state["black"]:
+            if b_tokens[0] == x:
+                black_count += 1
+                temp_node.state["black"].remove(b_tokens)
+        if colour == "white":
+            temp_dict[x] = weights[x] * (white_count - black_count)
+        else:
+            temp_dict[x] = weights[x] * (black_count - white_count)
+    temp_sum = 0
+    for keys in temp_dict:
+        temp_sum += temp_dict[keys]
+    return temp_sum
+
+
+def reward(current_node,colour,weights):
     if colour == "white":
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
@@ -53,7 +68,7 @@ def reward(current_node,colour):
             if(not current_node.state['white']) :
                 return -1 #black != 0 white = 0
             else :
-                return m.tanh(evaluation(current_node, colour)) # black != 0 white != 0
+                return m.tanh(evaluation(current_node, colour,weights)) # black != 0 white != 0
     else : # colour = black
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
@@ -64,7 +79,7 @@ def reward(current_node,colour):
             if(not current_node.state['white']) :
                 return 1 #black != 0 white = 0
             else :
-                return m.tanh(evaluation(current_node, colour)) # black != 0 white != 0
+                return m.tanh(evaluation(current_node, colour,weights)) # black != 0 white != 0
     
 def in_bounds(state, stack_num, move,colour):
     if (state[colour][stack_num][1] + move[1] < 0) or (state[colour][stack_num][1] + move[1] > 7) :
@@ -177,17 +192,17 @@ def state_search(current_node,colour,explode):
 
 # we are maxPlayer hence starts with mPlayer = true, a = -1000, b = 1000
 # beta is the maximum score the minimizing player (opponent) can get
-def minimax(maxPlayer, current_node, alpha, beta, our_colour) : 
+def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights) : 
     maxNum = 1000
     minNum = -1000
     
     if len(current_node.child) == 0 :
-        return reward(current_node, our_colour), current_node
+        return reward(current_node, our_colour,weights), current_node
     
     if maxPlayer:
         best = minNum
         for child in current_node.child :
-            val, temp = minimax(False, child, alpha, beta, our_colour)
+            val, temp = minimax(False, child, alpha, beta, our_colour,weights)
             if(val > best) :
                 best = val
                 best_node = child
@@ -200,7 +215,7 @@ def minimax(maxPlayer, current_node, alpha, beta, our_colour) :
     else:
         best = maxNum
         for child in current_node.child :
-            val, temp = minimax(True, child, alpha, beta, our_colour)
+            val, temp = minimax(True, child, alpha, beta, our_colour,weights)
             if(val < best) :
                 best = val
                 best_node = child

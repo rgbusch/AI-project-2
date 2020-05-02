@@ -1,6 +1,8 @@
 import math as m
 from your_team_name import player_functions as pf
 
+state_evaluation = []
+
 class Node:
     def __init__(self,state=None,child = [],action = None,move = None,depth = None):
 
@@ -10,6 +12,7 @@ class Node:
         self.action = action
         self.depth = depth
 
+
     
     def hasChild(self):
         return self.child
@@ -18,10 +21,11 @@ class Node:
         self.child.append(child_node)
 
 class Tree:
-    def __init__(self,root = None,current_depth = None,depth = None):
+    def __init__(self,root = None,current_depth = None,depth = None,weights = None):
         self.root = root
         self.current_depth=current_depth
         self.depth = depth
+        self.weights = weights
     
     
 
@@ -41,8 +45,11 @@ class Player:
         """
         self.colour = colour 
         self.opening_moves = {}
-
         
+        f = open("weights.txt","w+")
+        temp_str = f.readline()
+        weights = temp_str.strip().split(",")
+
         #we make move first
         if colour =="white": 
 
@@ -56,10 +63,12 @@ class Player:
 
 
             root_node = Node(initial_state,depth=0)
-            minimax_tree = Tree(root_node,0,2)
+            minimax_tree = Tree(root_node,0,2,weights = weights)
             self.minimax_tree = minimax_tree
             #white always start first
+            
             initial_possible_moves = pf.state_search(minimax_tree.root,'white',False)
+            
             for child in initial_possible_moves:
                 child.depth = 1
             minimax_tree.root.child = initial_possible_moves
@@ -89,7 +98,7 @@ class Player:
                     
         else:
             root_node = Node(depth=0)
-            minimax_tree = Tree(root_node,0,2)
+            minimax_tree = Tree(root_node,0,2,weights = weights)
             self.minimax_tree = minimax_tree
 
 
@@ -105,7 +114,7 @@ class Player:
         represented based on the spec's instructions for representing actions.
         """
         
-        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour)
+        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
 
         return best_node.action
         
@@ -156,8 +165,8 @@ class Player:
                     list[2] = action[3][1] - j[2]
             self.minimax_tree.root.state = initial_state
             self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, list, 'white')
-        
             self.minimax_tree.root.child = pf.state_search(self.minimax_tree.root, 'black', False)
+
             child_set = True
         
         for node in self.minimax_tree.root.child :
