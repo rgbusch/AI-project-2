@@ -12,7 +12,28 @@ class Node:
         self.action = action
         self.depth = depth
 
- 
+def weight_update(reward_score,learning_rate,lamda,weight):
+    sum_weights = sum(weight)
+    return_weight = []
+    for x in range(len(weight)):
+        second_part = 0
+        for y in range(len(reward_score)-1):
+            third_part = 0
+            for z in range(y,len(reward_score)-1):
+                third_part += m.pow(lamda,(z-y)) * (reward_score[y+1] - reward_score[y])
+            #derivate of tanh(w * f(s)) = f(s) * sech^2(w * f(s))
+            #as rewards are already presented after calculating tanh(w * f(s))
+            #by applying arctanh and dividing by the sum of weigths will help us obtain f(s) at that point
+            fs = m.atanh(reward_score[y])/sum_weights
+            #sech can be represented by 1/cosh which cosh is included in the maths library
+            sech_square = m.pow(1/m.cosh(weight[y]),2)
+            second_part += fs * sech_square
+            combined = second_part * third_part
+        temp_weight = weight[x] + learning_rate * combined
+        return_weight.append(temp_weight)
+    return return_weight
+
+
 
 def branch_approximation(current_node,colour):
     possible_moves = 0
