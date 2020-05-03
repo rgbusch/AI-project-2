@@ -2,7 +2,7 @@ import copy
 from cmath import sqrt
 import math as m
 from cgi import valid_boundary
-
+import random
 
 class Node:
     def __init__(self, state=None,child = [],action = None,move = None,depth =None):
@@ -85,7 +85,7 @@ def reward(current_node,colour,weights):
     if colour == "white":
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
-                return -0.1 # white = 0 black = 0
+                return 0 # white = 0 black = 0
             else :
                 return 1 # white != 0 black = 0
         else :
@@ -96,7 +96,7 @@ def reward(current_node,colour,weights):
     else : # colour = black
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
-                return -0.1 # white = 0 black = 0
+                return 0 # white = 0 black = 0
             else :
                 return -1 # white != 0 black = 0
         else :
@@ -210,7 +210,8 @@ def state_search(current_node,colour,explode):
                      # down i
                 if in_bounds(current_node.state, stack_num, [i,0,-i],colour) :
                     listOfNodes.append(node_move(current_node, stack_num, [i, 0, -i],colour))
-
+    #shuffling list of possible states so it doesnt always go for the first option
+    random.shuffle(listOfNodes)
     return listOfNodes
 
 

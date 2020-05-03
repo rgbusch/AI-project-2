@@ -72,7 +72,7 @@ class Player:
     def action(self):
         
         score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
-
+        state_reward.append(score)
         return best_node.action
         
 
@@ -107,14 +107,14 @@ class Player:
             approx2 = pf.branch_approximation(self.minimax_tree.root, self.colour)
             approx = (approx1 + approx2)/2
             if approx > 5 : # approx <= 5 if one node each can change to 3
-                while m.pow(approx, depth + 1) < 10000 : # 20000 gets max memory = 103MB
+                while m.pow(approx, depth + 1) < 16000 : # 20000 gets max memory = 103MB
                     depth += 1
             else :
                 depth = 2
             #generate moves to desired depth
             pf.generateMoves(self.minimax_tree.root, depth, 0, self.colour, True)
             
-            available = 10000 - approx*depth
+            available = 16000 - approx*depth
             maxNodesToExplore = available/approx
             
             if approx > 5 :
