@@ -90,15 +90,17 @@ class Player:
         # if action not found, recreate tree using root + action
         # if starting as black, this will always occur after first white action
         if actionNotFound :
-            for j in self.minimax_tree.root.state['white'] :
+            print(self.minimax_tree.root.state) ## add checking for boom action ## depth = 1 is why action not found
+            for j in self.minimax_tree.root.state[colour] :
                 if j[1] == action[2][0] and j[2] == action[2][1] :
-                    stack_num = self.minimax_tree.root.state["white"].index(j)
+                    stack_num = self.minimax_tree.root.state[colour].index(j)
                     move = [None, None, None]
-                    move[0] = 1
-                    move[1] = action[3][0] - j[1]
-                    move[2] = action[3][1] - j[2]
-            self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, move, 'white')
-            pf.generateMoves(self.minimax_tree.root, 2, 0, 'black', False)
+                    move[0] = action[1]
+                    move[1] = action[3][0] - action[2][0]
+                    move[2] = action[3][1] - action[2][1]
+            self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, move, colour)
+            
+            pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
 
         # if was our turn do nothing else, if was theirs generate new nodes
         if colour != self.colour :
@@ -107,14 +109,16 @@ class Player:
             approx2 = pf.branch_approximation(self.minimax_tree.root, self.colour)
             approx = (approx1 + approx2)/2
             if approx > 5 : # approx <= 5 if one node each can change to 3
-                while m.pow(approx, depth + 1) < 16000 : # 20000 gets max memory = 103MB
+                while m.pow(approx, depth + 1) < 19000 : # 20000 gets max memory = 103MB
                     depth += 1
             else :
+                depth = 2
+            if depth == 1 :
                 depth = 2
             #generate moves to desired depth
             pf.generateMoves(self.minimax_tree.root, depth, 0, self.colour, True)
             
-            available = 16000 - approx*depth
+            available = 19000 - approx*depth
             maxNodesToExplore = available/approx
             
             if approx > 5 :
@@ -137,4 +141,7 @@ class Player:
                             pf.generateMoves(listOfLeafs[i][0], 1, 0, self.colour, True)
                         else :
                             pf.generateMoves(listOfLeafs[i][0], 1, 0, colour, True)
-        
+            
+            
+            score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
+            state_reward.append(score)

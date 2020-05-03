@@ -1,11 +1,8 @@
 import copy 
 from cmath import sqrt
 import math as m
-<<<<<<< HEAD
 
-=======
-from cgi import valid_boundary
->>>>>>> ccd848068389d82fc3735c9ba6d3db7c4110a6eb
+import random
 
 class Node:
     def __init__(self, state=None,child = [],action = None,move = None,depth =None):
@@ -43,13 +40,13 @@ def branch_approximation(current_node,colour):
     possible_moves = 0
     if (current_node.state[colour]):
         for stack_num in range(len(current_node.state[colour])):
-            maximum_moves = current_node.state[colour][stack_num][0]*4 + 1
+            maximum_moves = current_node.state[colour][stack_num][0]*current_node.state[colour][stack_num][0]*4 + 1
             move_range = current_node.state[colour][stack_num][0]
             for x in range(-(move_range),move_range+1):
                 if (in_bounds(current_node.state,stack_num,[abs(x),0,x],colour)) == False:
-                    maximum_moves -= 1
+                    maximum_moves -= 1*current_node.state[colour][stack_num][0]
                 if (in_bounds(current_node.state,stack_num,[abs(x),x,0],colour)) == False:
-                    maximum_moves -= 1
+                    maximum_moves -= 1*current_node.state[colour][stack_num][0]
             possible_moves += maximum_moves
     else: # prevents getting stuck in for loop in update if no stacks
         return 20
@@ -88,6 +85,7 @@ def reward(current_node,colour,weights):
     if colour == "white":
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
+                return 0 # white = 0 black = 0
             else :
                 return 1 # white != 0 black = 0
         else :
@@ -98,6 +96,7 @@ def reward(current_node,colour,weights):
     else : # colour = black
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
+                return 0 # white = 0 black = 0
             else :
                 return -1 # white != 0 black = 0
         else :
@@ -199,23 +198,21 @@ def state_search(current_node,colour,explode):
                                     temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
                                     listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
             for i in range(1,n+1):
+                for j in range(1, n + 1) :
                     # move up by ith tokens
-                if in_bounds(current_node.state, stack_num, [i,0,i],colour) :
-                    listOfNodes.append(node_move(current_node, stack_num, [i,0,i],colour))
-                     # left i
-                if in_bounds(current_node.state, stack_num, [i,-i,0],colour) :
-                    listOfNodes.append(node_move(current_node, stack_num, [i, -i, 0],colour))
-                     # right i
-                if in_bounds(current_node.state, stack_num, [i,i,0],colour) :
-                    listOfNodes.append(node_move(current_node, stack_num, [i, i, 0],colour))
-                     # down i
-                if in_bounds(current_node.state, stack_num, [i,0,-i],colour) :
-                    listOfNodes.append(node_move(current_node, stack_num, [i, 0, -i],colour))
-<<<<<<< HEAD
-        if colour == 'black' :
-            listOfNodes.reverse()
-=======
->>>>>>> ccd848068389d82fc3735c9ba6d3db7c4110a6eb
+                    if in_bounds(current_node.state, stack_num, [i,0,j],colour) :
+                        listOfNodes.append(node_move(current_node, stack_num, [i,0,j],colour))
+                    # left i
+                    if in_bounds(current_node.state, stack_num, [i,-j,0],colour) :
+                        listOfNodes.append(node_move(current_node, stack_num, [i, -j, 0],colour))
+                    # right i
+                    if in_bounds(current_node.state, stack_num, [i,j,0],colour) :
+                        listOfNodes.append(node_move(current_node, stack_num, [i, j, 0],colour))
+                    # down i
+                    if in_bounds(current_node.state, stack_num, [i,0,-j],colour) :
+                        listOfNodes.append(node_move(current_node, stack_num, [i, 0, -j],colour))
+    #shuffling list of possible states so it doesnt always go for the first option
+    random.shuffle(listOfNodes)
     return listOfNodes
 
 
