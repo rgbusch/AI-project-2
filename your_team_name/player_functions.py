@@ -42,14 +42,14 @@ def branch_approximation(current_node,colour):
         for stack_num in range(len(current_node.state[colour])):
             maximum_moves = current_node.state[colour][stack_num][0]*4 + 1
             move_range = current_node.state[colour][stack_num][0]
-            x_loc = current_node.state[colour][stack_num][1]
-            y_loc = current_node.state[colour][stack_num][2]    
             for x in range(-(move_range),move_range+1):
-                if (in_bounds(current_node.state,stack_num,[abs(x),0,y_loc+x],colour)) == False:
+                if (in_bounds(current_node.state,stack_num,[abs(x),0,x],colour)) == False:
                     maximum_moves -= 1
-                if (in_bounds(current_node.state,stack_num,[abs(x),x_loc+x,0],colour)) == False:
+                if (in_bounds(current_node.state,stack_num,[abs(x),x,0],colour)) == False:
                     maximum_moves -= 1
             possible_moves += maximum_moves
+    else: # prevents getting stuck in for loop in update if no stacks
+        return 20
     return possible_moves
 
 
@@ -58,7 +58,6 @@ def evaluation(current_node,colour,weights):
 
     temp_dict = {}
     temp_node = copy.deepcopy(current_node)
-
     for x in range(len(weights)):
         white_count = 0
         black_count = 0
@@ -86,7 +85,7 @@ def reward(current_node,colour,weights):
     if colour == "white":
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
-                return 0 # white = 0 black = 0
+                return -0.1 # white = 0 black = 0
             else :
                 return 1 # white != 0 black = 0
         else :
@@ -97,7 +96,7 @@ def reward(current_node,colour,weights):
     else : # colour = black
         if(not current_node.state['black']) :
             if(not current_node.state['white']) :
-                return 0 # white = 0 black = 0
+                return -0.1 # white = 0 black = 0
             else :
                 return -1 # white != 0 black = 0
         else :
