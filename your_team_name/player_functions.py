@@ -1,7 +1,6 @@
 import copy 
 from cmath import sqrt
 import math as m
-from cgi import valid_boundary
 
 
 class Node:
@@ -210,7 +209,8 @@ def state_search(current_node,colour,explode):
                      # down i
                 if in_bounds(current_node.state, stack_num, [i,0,-i],colour) :
                     listOfNodes.append(node_move(current_node, stack_num, [i, 0, -i],colour))
-
+        if colour == 'black' :
+            listOfNodes.reverse()
     return listOfNodes
 
 

@@ -10,3 +10,7 @@
 *.pyc
 *.pyc
 your_team_name/__pycache__/__init__.cpython-36.pyc
+referee/__pycache__/game.cpython-36.pyc
+referee/__pycache__/__main__.cpython-36.pyc
+referee/__pycache__/game.cpython-36.pyc
+referee/__pycache__/log.cpython-36.pyc

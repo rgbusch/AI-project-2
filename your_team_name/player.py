@@ -30,7 +30,7 @@ class Tree:
     def getLeafNodes(self, node, leafs, colour, weights) :
         if node is not None :
             if len(node.child) == 0 :
-                leafs.append((node, pf.reward(node, colour, weights))) # change to append weight too
+                leafs.append((node, pf.reward(node, colour, weights)))
             for n in node.child :
                 self.getLeafNodes(n, leafs, colour, weights)
 
@@ -40,7 +40,7 @@ class Player:
     def __init__(self, colour):
         
         self.colour = colour
-        
+        self.count = 0
         f = open("your_team_name/weights.txt","r")
         
         temp_str = f.read()
@@ -107,14 +107,14 @@ class Player:
             approx2 = pf.branch_approximation(self.minimax_tree.root, self.colour)
             approx = (approx1 + approx2)/2
             if approx > 5 : # approx <= 5 if one node each can change to 3
-                while m.pow(approx, depth + 1) < 10000 : # 20000 gets max memory = 103MB
+                while m.pow(approx, depth + 1) < 16000 : # 20000 gets max memory = 103MB
                     depth += 1
             else :
                 depth = 2
             #generate moves to desired depth
             pf.generateMoves(self.minimax_tree.root, depth, 0, self.colour, True)
             
-            available = 10000 - approx*depth
+            available = 16000 - approx*depth
             maxNodesToExplore = available/approx
             
             if approx > 5 :
@@ -128,8 +128,8 @@ class Player:
                     nodesToExplore = len(listOfLeafs)
                 else :
                     nodesToExplore = int(maxNodesToExplore)
-                if nodesToExplore > 250 :
-                    nodesToExplore = 250
+                if nodesToExplore > 300 and depth < 3 :
+                    nodesToExplore = 300
                 
                 if len(listOfLeafs) > 0 : 
                     for i in range(nodesToExplore) :
