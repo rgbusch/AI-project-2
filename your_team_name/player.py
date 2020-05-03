@@ -72,7 +72,7 @@ class Player:
     def action(self):
         
         score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
-
+        state_reward.append(score)
         return best_node.action
         
 

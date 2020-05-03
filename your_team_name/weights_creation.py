@@ -1,6 +1,6 @@
 temp_list = []
 for x in range(1,12):
-    temp_list.append(1 + (x-1)/12)
+    temp_list.append(x + (x-1)/12)
 
 f = open("weights.txt","w+")
 
