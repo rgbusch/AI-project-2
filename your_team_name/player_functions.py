@@ -14,6 +14,14 @@ class Node:
 
 def weight_update(reward_score,learning_rate,lamda,weight):
 
+    print("=============================")
+    print("\n")
+    print("\n")
+    print("\n")
+    print("\n")
+    print("\n")
+    print("=============================")
+
     sum_weights = sum(weight)
     return_weight = []
 
@@ -96,27 +104,25 @@ def evaluation(current_node,colour,weights):
 def reward(current_node,colour,weights,reward_s):
     if colour == "white":
         if(not current_node.state['black']) :
-            weight_update(reward_s,0.1,1,weights)
+            
             if(not current_node.state['white']) :
                 return 0 # white = 0 black = 0
             else :
                 return 1 # white != 0 black = 0
         else :
             if(not current_node.state['white']) :
-                weight_update(reward_s,0.1,1,weights)
                 return -1 #black != 0 white = 0
             else :
                 return m.tanh(evaluation(current_node, colour,weights)) # black != 0 white != 0
     else : # colour = black
         if(not current_node.state['black']) :
-            weight_update(reward_s,0.1,1,weights)
+            
             if(not current_node.state['white']) :
                 return 0 # white = 0 black = 0
             else :
                 return -1 # white != 0 black = 0
         else :
             if(not current_node.state['white']) :
-                weight_update(reward_s,0.1,1,weights)
                 return 1 #black != 0 white = 0
             else :
                 return m.tanh(evaluation(current_node, colour,weights)) # black != 0 white != 0
