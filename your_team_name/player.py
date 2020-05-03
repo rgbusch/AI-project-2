@@ -111,7 +111,6 @@ class Player:
                     depth += 1
             else :
                 depth = 2
-                
             #generate moves to desired depth
             pf.generateMoves(self.minimax_tree.root, depth, 0, self.colour, True)
             
