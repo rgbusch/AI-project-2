@@ -116,7 +116,7 @@ class Player:
             
             available = 10000 - approx*depth
             maxNodesToExplore = available/approx
-            """
+           
             if approx > 5 :
                 
                 listOfLeafs = []
@@ -137,4 +137,4 @@ class Player:
                             pf.generateMoves(listOfLeafs[i][0], 1, 0, self.colour, True)
                         else :
                             pf.generateMoves(listOfLeafs[i][0], 1, 0, colour, True)
-        """
+       
