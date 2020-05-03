@@ -30,7 +30,7 @@ class Tree:
     def getLeafNodes(self, node, leafs, colour, weights) :
         if node is not None :
             if len(node.child) == 0 :
-                leafs.append((node, pf.reward(node, colour, weights)))
+                leafs.append((node, pf.reward(node, colour, weights,state_reward))) # change to append weight too
             for n in node.child :
                 self.getLeafNodes(n, leafs, colour, weights)
 
@@ -71,7 +71,7 @@ class Player:
 
     def action(self):
         
-        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
+        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights,state_reward)
         state_reward.append(score)
         return best_node.action
         

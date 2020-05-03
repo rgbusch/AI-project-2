@@ -13,26 +13,46 @@ class Node:
         self.depth = depth
 
 def weight_update(reward_score,learning_rate,lamda,weight):
+
+    print("=============================")
+    print("\n")
+    print("\n")
+    print("\n")
+    print("\n")
+    print("\n")
+    print("=============================")
+
     sum_weights = sum(weight)
     return_weight = []
-    for x in range(len(weight)):
+
+    total_sum = 0
+    for y in range(len(reward_score)-1):
         second_part = 0
-        combined = 0
-        for y in range(len(reward_score)-1):
-            third_part = 0
-            for z in range(y,len(reward_score)-1):
-                third_part += m.pow(lamda,(z-y)) * (reward_score[y+1] - reward_score[y])
-            #derivate of tanh(w * f(s)) = f(s) * sech^2(w * f(s))
-            #as rewards are already presented after calculating tanh(w * f(s))
-            #by applying arctanh and dividing by the sum of weigths will help us obtain f(s) at that point
-            fs = m.atanh(reward_score[y])/sum_weights
-            #sech can be represented by 1/cosh which cosh is included in the maths library
-            sech_square = m.pow(1/m.cosh(weight[y]),2)
-            second_part += fs * sech_square
-            combined += second_part * third_part
-        temp_weight = weight[x] + learning_rate * combined
-        return_weight.append(temp_weight)
-    return return_weight
+        for z in range(y,len(reward_score)-1):
+            second_part += m.pow(lamda,(z-y)) * (reward_score[y+1] - reward_score[y])
+        #derivate of tanh(w * f(s)) = f(s) * sech^2(w * f(s))
+        #as rewards are already presented after calculating tanh(w * f(s))
+        #by applying arctanh and dividing by the sum of weigths will help us obtain f(s) at that point
+        fs = m.atanh(reward_score[y])/sum_weights
+        #sech can be represented by 1/cosh which cosh is included in the maths library
+        sech_square = m.pow(1/m.cosh(reward_score[y]),2)
+        combined = fs * sech_square * second_part
+        total_sum += combined
+    total_sum = total_sum * learning_rate
+
+    for w in weight:
+        return_weight.append(w + total_sum)
+
+    f = open("your_team_name/weights.txt","w+")
+    temp_str = ""
+    for w in return_weight:
+        if w != return_weight[-1]:
+            temp_str += (str(w) + ",")
+        else:
+            temp_str += (str(w))
+    f.write(temp_str)
+    f.close()
+
 
 
 
@@ -81,9 +101,10 @@ def evaluation(current_node,colour,weights):
     return temp_sum
 
 
-def reward(current_node,colour,weights):
+def reward(current_node,colour,weights,reward_s):
     if colour == "white":
         if(not current_node.state['black']) :
+            
             if(not current_node.state['white']) :
                 return 0 # white = 0 black = 0
             else :
@@ -95,6 +116,7 @@ def reward(current_node,colour,weights):
                 return m.tanh(evaluation(current_node, colour,weights)) # black != 0 white != 0
     else : # colour = black
         if(not current_node.state['black']) :
+            
             if(not current_node.state['white']) :
                 return 0 # white = 0 black = 0
             else :
@@ -218,17 +240,17 @@ def state_search(current_node,colour,explode):
 
 # we are maxPlayer hence starts with mPlayer = true, a = -1000, b = 1000
 # beta is the maximum score the minimizing player (opponent) can get
-def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights) : 
+def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights,reward_s) : 
     maxNum = 1000
     minNum = -1000
     
     if len(current_node.child) == 0 :
-        return reward(current_node, our_colour,weights), current_node
+        return reward(current_node, our_colour,weights,reward_s), current_node
     
     if maxPlayer:
         best = minNum
         for child in current_node.child :
-            val, temp = minimax(False, child, alpha, beta, our_colour,weights)
+            val, temp = minimax(False, child, alpha, beta, our_colour,weights,reward_s)
             if(val > best) :
                 best = val
                 best_node = child
@@ -241,7 +263,7 @@ def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights) :
     else:
         best = maxNum
         for child in current_node.child :
-            val, temp = minimax(True, child, alpha, beta, our_colour,weights)
+            val, temp = minimax(True, child, alpha, beta, our_colour,weights,reward_s)
             if(val < best) :
                 best = val
                 best_node = child
