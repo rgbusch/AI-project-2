@@ -30,7 +30,7 @@ class Tree:
     def getLeafNodes(self, node, leafs, colour, weights) :
         if node is not None :
             if len(node.child) == 0 :
-                leafs.append((node, pf.reward(node, colour))) # change to append weight too
+                leafs.append((node, pf.reward(node, colour,self.weights))) # change to append weight too
             for n in node.child :
                 self.getLeafNodes(n, leafs, colour, weights)
 
