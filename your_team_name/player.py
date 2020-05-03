@@ -90,7 +90,7 @@ class Player:
         # if action not found, recreate tree using root + action
         # if starting as black, this will always occur after first white action
         if actionNotFound :
-            print(self.minimax_tree.root.state) ## add checking for boom action ## depth = 1 is why action not found
+            #print(self.minimax_tree.root.state) ## add checking for boom action ## depth = 1 is why action not found
             for j in self.minimax_tree.root.state[colour] :
                 if j[1] == action[2][0] and j[2] == action[2][1] :
                     stack_num = self.minimax_tree.root.state[colour].index(j)
@@ -143,5 +143,5 @@ class Player:
                             pf.generateMoves(listOfLeafs[i][0], 1, 0, colour, True)
             
             
-            score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
+            score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights, state_reward)
             state_reward.append(score)
