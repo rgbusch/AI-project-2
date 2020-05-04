@@ -64,9 +64,7 @@ class Player:
         
         #if we start as white, generate moveset here  
         if colour == "white" :
-            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False)
-
-
+            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False) 
 
 
     def action(self):
@@ -90,7 +88,7 @@ class Player:
         # if action not found, recreate tree using root + action
         # if starting as black, this will always occur after first white action
         if actionNotFound :
-            #print(self.minimax_tree.root.state) ## add checking for boom action ## depth = 1 is why action not found
+            #print(self.minimax_tree.root.state) ## add checking for boom action
             for j in self.minimax_tree.root.state[colour] :
                 if j[1] == action[2][0] and j[2] == action[2][1] :
                     stack_num = self.minimax_tree.root.state[colour].index(j)
@@ -102,46 +100,24 @@ class Player:
             
             pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
 
-        # if was our turn do nothing else, if was theirs generate new nodes
+        curNodes = 1
+        maxNodes = 16000
+        leafs = [(self.minimax_tree.root, 0)]
+        fraction = 1
+        count1 = 0
         if colour != self.colour :
-            depth = 0
-            approx1 = pf.branch_approximation(self.minimax_tree.root, colour)
-            approx2 = pf.branch_approximation(self.minimax_tree.root, self.colour)
-            approx = (approx1 + approx2)/2
-            if approx > 5 : # approx <= 5 if one node each can change to 3
-                while m.pow(approx, depth + 1) < 19000 : # 20000 gets max memory = 103MB
-                    depth += 1
-            else :
-                depth = 2
-            if depth == 1 :
-                depth = 2
-            #generate moves to desired depth
-            pf.generateMoves(self.minimax_tree.root, depth, 0, self.colour, True)
-            
-            available = 19000 - approx*depth
-            maxNodesToExplore = available/approx
-            
-            if approx > 5 :
+            while curNodes < maxNodes and count1 < 8: ## have to generate all our first moves, as minimax sometimes picks one not further explored
+                if count1 > 0 :
+                    fraction = 1/32
+                count1 += 1
+                leafs, curNodes = pf.someOurMoves(leafs, self.colour, True, curNodes, maxNodes, fraction, self.minimax_tree.weights, state_reward)
+                # use this if to make faster at start of game
+                if len(leafs) == 0 or (pf.branch_approximation(leafs[0][0], colour) > 50 and count1 > 1) :
+                    break
+                if curNodes > maxNodes :
+                    break
+                leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes, self.minimax_tree.weights, state_reward)
                 
-                listOfLeafs = []
-                self.minimax_tree.getLeafNodes(self.minimax_tree.root, listOfLeafs, self.colour, self.minimax_tree.weights)
-                listOfLeafs.sort(key = lambda x: x[1])
-                
-                # determine how many nodes to explore
-                if maxNodesToExplore > len(listOfLeafs) :
-                    nodesToExplore = len(listOfLeafs)
-                else :
-                    nodesToExplore = int(maxNodesToExplore)
-                if nodesToExplore > 300 and depth < 3 :
-                    nodesToExplore = 300
-                
-                if len(listOfLeafs) > 0 : 
-                    for i in range(nodesToExplore) :
-                        if depth % 2 == 0 :
-                            pf.generateMoves(listOfLeafs[i][0], 1, 0, self.colour, True)
-                        else :
-                            pf.generateMoves(listOfLeafs[i][0], 1, 0, colour, True)
-            
-            
             score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights, state_reward)
             state_reward.append(score)
+        

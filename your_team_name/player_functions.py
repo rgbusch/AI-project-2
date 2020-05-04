@@ -5,12 +5,13 @@ import math as m
 import random
 
 class Node:
-    def __init__(self, state=None,child = [],action = None,move = None,depth =None):
+    def __init__(self, state=None,child = [],action = None,move = None,depth =None, reward = 0):
         self.state = state
         self.child = child
         self.move = move
         self.action = action
         self.depth = depth
+        self.reward = reward
 
 def weight_update(reward_score,learning_rate,lamda,weight):
 
@@ -97,7 +98,21 @@ def evaluation(current_node,colour,weights):
     
     for keys in temp_dict:
         temp_sum += temp_dict[keys]
-
+    if colour == 'white' :
+        other = 'black'
+    else :
+        other = 'white'
+    # done so that
+    done = False
+    for ours in current_node.state[colour] :
+        for theirs in current_node.state[other] :
+            if adjacacent(ours, theirs) :
+                temp_sum += 0.2
+                done = True
+                break
+        if done :
+            break
+    
     return temp_sum
 
 
@@ -208,7 +223,12 @@ def state_search(current_node,colour,explode):
             
             # explode move
             if explode == True:
-
+                boom_state = boom(current_node.state, stack_num, colour)
+                temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
+                listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
+                ## i think filtered boom is not functioning properly, as boom states result a lot less often when using it
+                ## also as this function calls for opponents moves too, doesn't record chain explosions
+                """
                 #reducing branching factor by checking if there are any other opponent's tokens within explosion range
                 #explosion states creation would be unnessary if it doesnt destroy enemy tokens
                 for x in range(current_node.state[colour][stack_num][1]-1,current_node.state[colour][stack_num][1]+2):
@@ -219,6 +239,7 @@ def state_search(current_node,colour,explode):
                                     boom_state = boom(current_node.state, stack_num, colour)
                                     temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
                                     listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
+                """
             for i in range(1,n+1):
                 for j in range(1, n + 1) :
                     # move up by ith tokens
@@ -292,3 +313,35 @@ def generateMoves(root, maxDepth, curDepth, colour, explode) :
             else :
                 curDepth += 1
     return 0
+
+
+# leafs an array of tuples: [(node, weight)...]
+# generate a fraction of our possible moves from a set of leaf nodes
+def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, state_reward) :
+    newLeafs = []
+    if len(leafs) > 0 :
+        for i in range(len(leafs)) :
+            curSpace += branch_approximation(leafs[i][0], colour)
+            if curSpace <= maxSpace :
+                leafs[i][0].child = state_search(leafs[i][0], colour, explode)
+                for j in leafs[i][0].child :
+                    newLeafs.append((j, reward(j, colour, weights, state_reward)))
+            else :
+                break
+    # now choose fraction of our moves to return
+    newLeafs.sort(key = lambda x: x[1])
+    return newLeafs[:int(len(newLeafs)*fraction)], curSpace
+
+def someTheirMoves(leafs, colour, curSpace, maxSpace, weights, state_reward) :
+    newLeafs = []
+    if len(leafs) > 0 :
+        for i in leafs :
+            curSpace += branch_approximation(i[0], colour)
+            if curSpace <= maxSpace :
+                i[0].child = state_search(i[0], colour, True)
+                for j in i[0].child :
+                    newLeafs.append((j, reward(j, colour, weights, state_reward)))
+            else :
+                break
+    return newLeafs, curSpace
+    
