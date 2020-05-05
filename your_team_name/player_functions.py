@@ -13,15 +13,20 @@ class Node:
         self.depth = depth
         self.reward = reward
 
-def weight_update(reward_score,learning_rate,lamda,weight):
 
-    print("=============================")
-    print("\n")
-    print("\n")
-    print("\n")
-    print("\n")
-    print("\n")
-    print("=============================")
+def game_evaluation(current_node,colour):
+    hasCompleted = True
+    if colour == "white":
+        if current_node.state[colour]:
+            if current_node.state["black"]:
+                hasCompleted = False
+    else:
+        if current_node.state[colour]:
+            if current_node.state['white']:
+                hasCompleted = False
+    return hasCompleted
+
+def weight_update(reward_score,learning_rate,lamda,weight):
 
     sum_weights = sum(weight)
     return_weight = []
@@ -116,7 +121,7 @@ def evaluation(current_node,colour,weights):
     return temp_sum
 
 
-def reward(current_node,colour,weights,reward_s):
+def reward(current_node,colour,weights,):
     if colour == "white":
         if(not current_node.state['black']) :
             
@@ -261,17 +266,17 @@ def state_search(current_node,colour,explode):
 
 # we are maxPlayer hence starts with mPlayer = true, a = -1000, b = 1000
 # beta is the maximum score the minimizing player (opponent) can get
-def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights,reward_s) : 
+def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights) : 
     maxNum = 1000
     minNum = -1000
     
     if len(current_node.child) == 0 :
-        return reward(current_node, our_colour,weights,reward_s), current_node
+        return reward(current_node, our_colour,weights), current_node
     
     if maxPlayer:
         best = minNum
         for child in current_node.child :
-            val, temp = minimax(False, child, alpha, beta, our_colour,weights,reward_s)
+            val, temp = minimax(False, child, alpha, beta, our_colour,weights)
             if(val > best) :
                 best = val
                 best_node = child
@@ -284,7 +289,7 @@ def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights,reward_s) :
     else:
         best = maxNum
         for child in current_node.child :
-            val, temp = minimax(True, child, alpha, beta, our_colour,weights,reward_s)
+            val, temp = minimax(True, child, alpha, beta, our_colour,weights)
             if(val < best) :
                 best = val
                 best_node = child
@@ -317,7 +322,7 @@ def generateMoves(root, maxDepth, curDepth, colour, explode) :
 
 # leafs an array of tuples: [(node, weight)...]
 # generate a fraction of our possible moves from a set of leaf nodes
-def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, state_reward) :
+def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) :
     newLeafs = []
     if len(leafs) > 0 :
         for i in range(len(leafs)) :
@@ -325,14 +330,14 @@ def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, 
             if curSpace <= maxSpace :
                 leafs[i][0].child = state_search(leafs[i][0], colour, explode)
                 for j in leafs[i][0].child :
-                    newLeafs.append((j, reward(j, colour, weights, state_reward)))
+                    newLeafs.append((j, reward(j, colour, weights)))
             else :
                 break
     # now choose fraction of our moves to return
     newLeafs.sort(key = lambda x: x[1])
     return newLeafs[:int(len(newLeafs)*fraction)], curSpace
 
-def someTheirMoves(leafs, colour, curSpace, maxSpace, weights, state_reward) :
+def someTheirMoves(leafs, colour, curSpace, maxSpace, weights) :
     newLeafs = []
     if len(leafs) > 0 :
         for i in leafs :
@@ -340,7 +345,7 @@ def someTheirMoves(leafs, colour, curSpace, maxSpace, weights, state_reward) :
             if curSpace <= maxSpace :
                 i[0].child = state_search(i[0], colour, True)
                 for j in i[0].child :
-                    newLeafs.append((j, reward(j, colour, weights, state_reward)))
+                    newLeafs.append((j, reward(j, colour, weights)))
             else :
                 break
     return newLeafs, curSpace

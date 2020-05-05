@@ -30,7 +30,7 @@ class Tree:
     def getLeafNodes(self, node, leafs, colour, weights) :
         if node is not None :
             if len(node.child) == 0 :
-                leafs.append((node, pf.reward(node, colour, weights,state_reward))) # change to append weight too
+                leafs.append((node, pf.reward(node, colour, weights))) # change to append weight too
             for n in node.child :
                 self.getLeafNodes(n, leafs, colour, weights)
 
@@ -69,8 +69,9 @@ class Player:
 
     def action(self):
         
-        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights,state_reward)
+        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
         state_reward.append(score)
+        
         return best_node.action
         
 
@@ -80,6 +81,10 @@ class Player:
         actionNotFound = True
         # look for given action in current tree, and assign new root
         
+        if colour != self.colour:
+            score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000,colour,self.minimax_tree.weights)
+            state_reward.append(score)
+
         if len(self.minimax_tree.root.child) > 0 :
             for node in self.minimax_tree.root.child :
                 if(node.action == action) :
@@ -100,6 +105,10 @@ class Player:
             
             pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
 
+        # checkes if the game state after updating has the game completed, if completed, update the weight
+        if pf.game_evaluation(self.minimax_tree.root,colour) == True:
+            pf.weight_update(state_reward,0.1,1,self.minimax_tree.weights)
+
         curNodes = 1
         maxNodes = 16000
         leafs = [(self.minimax_tree.root, 0)]
@@ -110,14 +119,13 @@ class Player:
                 if count1 > 0 :
                     fraction = 1/32
                 count1 += 1
-                leafs, curNodes = pf.someOurMoves(leafs, self.colour, True, curNodes, maxNodes, fraction, self.minimax_tree.weights, state_reward)
+                leafs, curNodes = pf.someOurMoves(leafs, self.colour, True, curNodes, maxNodes, fraction, self.minimax_tree.weights)
                 # use this if to make faster at start of game
                 if len(leafs) == 0 or (pf.branch_approximation(leafs[0][0], colour) > 50 and count1 > 1) :
                     break
                 if curNodes > maxNodes :
                     break
-                leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes, self.minimax_tree.weights, state_reward)
+                leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes, self.minimax_tree.weights)
                 
-            score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights, state_reward)
-            state_reward.append(score)
+            
         
