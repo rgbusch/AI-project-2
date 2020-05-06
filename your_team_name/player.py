@@ -84,12 +84,13 @@ class Player:
         if colour != self.colour:
             score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000,colour,self.minimax_tree.weights)
             state_reward.append(score)
-
+        
         if len(self.minimax_tree.root.child) > 0 :
             for node in self.minimax_tree.root.child :
                 if(node.action == action) :
                     self.minimax_tree.root = node
                     actionNotFound = False
+        
         # if action not found, recreate tree using root + action
         # if starting as black, this will always occur after first white action
         if actionNotFound :
@@ -104,11 +105,7 @@ class Player:
             self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, move, colour)
             
             pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
-
-        # checkes if the game state after updating has the game completed, if completed, update the weight
-        if pf.game_evaluation(self.minimax_tree.root,colour) == True:
-            pf.weight_update(state_reward,0.1,1,self.minimax_tree.weights)
-
+        
         curNodes = 1
         maxNodes = 16000
         leafs = [(self.minimax_tree.root, 0)]
@@ -127,5 +124,9 @@ class Player:
                     break
                 leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes, self.minimax_tree.weights)
                 
-            
+        
+        # checkes if the game state after updating has the game completed, if completed, update the weight
+        if pf.game_evaluation(self.minimax_tree.root,colour) == True:
+            pf.weight_update(state_reward,0.1,1,self.minimax_tree.weights)
+        
         

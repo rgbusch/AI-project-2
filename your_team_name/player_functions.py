@@ -11,7 +11,7 @@ class Node:
         self.move = move
         self.action = action
         self.depth = depth
-        self.reward = reward
+
 
 
 def game_evaluation(current_node,colour):
@@ -39,7 +39,15 @@ def weight_update(reward_score,learning_rate,lamda,weight):
         #derivate of tanh(w * f(s)) = f(s) * sech^2(w * f(s))
         #as rewards are already presented after calculating tanh(w * f(s))
         #by applying arctanh and dividing by the sum of weigths will help us obtain f(s) at that point
-        fs = m.atanh(reward_score[y])/sum_weights
+
+        #arctangent doesnt take 1 or -1 as range. So 1 and -1 changed to something slightly bigger/smaller
+        if reward_score[y] == 1:
+            f1 = m.atanh(reward_score[y]-0.000001)
+        elif reward_score[y] == -1:
+            f1 = m.atanh(reward_score[y]+0.000001)
+        else:
+            f1 = m.atanh(reward_score[y])
+        fs = f1/sum_weights
         #sech can be represented by 1/cosh which cosh is included in the maths library
         sech_square = m.pow(1/m.cosh(reward_score[y]),2)
         combined = fs * sech_square * second_part
@@ -121,7 +129,7 @@ def evaluation(current_node,colour,weights):
     return temp_sum
 
 
-def reward(current_node,colour,weights,):
+def reward(current_node,colour,weights):
     if colour == "white":
         if(not current_node.state['black']) :
             
