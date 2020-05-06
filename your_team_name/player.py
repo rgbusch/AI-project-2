@@ -64,7 +64,7 @@ class Player:
         
         #if we start as white, generate moveset here  
         if colour == "white" :
-            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, True) 
+            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False) 
 
     def action(self):
         
@@ -137,6 +137,8 @@ class Player:
             state_reward.append(score)
         
         # checks if the game state after updating has the game completed, if completed, update the weight
-        if pf.game_evaluation(self.minimax_tree.root,colour) == True:
-            pf.weight_update(state_reward,0.1,1,self.minimax_tree.weights)
+        if colour == self.colour:
+
+            if pf.game_evaluation(self.minimax_tree.root,colour) == True:
+                pf.weight_update(state_reward,0.1,1,self.minimax_tree.weights)
         
