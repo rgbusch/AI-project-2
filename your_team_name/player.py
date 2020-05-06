@@ -64,7 +64,7 @@ class Player:
         
         #if we start as white, generate moveset here  
         if colour == "white" :
-            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False) 
+            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, True) 
 
     def action(self):
         
@@ -95,16 +95,24 @@ class Player:
         
         # if action not found, recreate tree using root + action
         # if starting as black, this will always occur after first white action
+        boom = False
         if actionNotFound :
             #print(self.minimax_tree.root.state) ## add checking for boom action
-            for j in self.minimax_tree.root.state[colour] :
-                if j[1] == action[2][0] and j[2] == action[2][1] :
-                    stack_num = self.minimax_tree.root.state[colour].index(j)
-                    move = [None, None, None]
-                    move[0] = action[1]
-                    move[1] = action[3][0] - action[2][0]
-                    move[2] = action[3][1] - action[2][1]
-            self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, move, colour)
+            if action[0] == 'BOOM' :
+                pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
+                if len(self.minimax_tree.root.child) > 0 :
+                    for node in self.minimax_tree.root.child :
+                        if(node.action == action) :
+                            self.minimax_tree.root = node
+            else :
+                for j in self.minimax_tree.root.state[colour] :
+                    if j[1] == action[2][0] and j[2] == action[2][1] :
+                        stack_num = self.minimax_tree.root.state[colour].index(j)
+                        move = [None, None, None]
+                        move[0] = action[1]
+                        move[1] = action[3][0] - action[2][0]
+                        move[2] = action[3][1] - action[2][1]
+                self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, move, colour)
             pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
 
         if colour != self.colour :
