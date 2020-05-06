@@ -11,17 +11,22 @@ class Node:
         self.move = move
         self.action = action
         self.depth = depth
-        self.reward = reward
+
+
+
+def game_evaluation(current_node,colour):
+    hasCompleted = True
+    if colour == "white":
+        if current_node.state[colour]:
+            if current_node.state["black"]:
+                hasCompleted = False
+    else:
+        if current_node.state[colour]:
+            if current_node.state['white']:
+                hasCompleted = False
+    return hasCompleted
 
 def weight_update(reward_score,learning_rate,lamda,weight):
-
-    print("=============================")
-    print("\n")
-    print("\n")
-    print("\n")
-    print("\n")
-    print("\n")
-    print("=============================")
 
     sum_weights = sum(weight)
     return_weight = []
@@ -34,7 +39,15 @@ def weight_update(reward_score,learning_rate,lamda,weight):
         #derivate of tanh(w * f(s)) = f(s) * sech^2(w * f(s))
         #as rewards are already presented after calculating tanh(w * f(s))
         #by applying arctanh and dividing by the sum of weigths will help us obtain f(s) at that point
-        fs = m.atanh(reward_score[y])/sum_weights
+
+        #arctangent doesnt take 1 or -1 as range. So 1 and -1 changed to something slightly bigger/smaller
+        if reward_score[y] == 1:
+            f1 = m.atanh(reward_score[y]-0.000001)
+        elif reward_score[y] == -1:
+            f1 = m.atanh(reward_score[y]+0.000001)
+        else:
+            f1 = m.atanh(reward_score[y])
+        fs = f1/sum_weights
         #sech can be represented by 1/cosh which cosh is included in the maths library
         sech_square = m.pow(1/m.cosh(reward_score[y]),2)
         combined = fs * sech_square * second_part
@@ -76,30 +89,6 @@ def branch_approximation(current_node,colour):
 
 
 def evaluation(current_node,colour,weights):
-    """
-    temp_dict = {}
-    temp_node = copy.deepcopy(current_node)
-    for x in range(len(weights)):
-        white_count = 0
-        black_count = 0
-        for w_tokens in temp_node.state["white"]:
-            if w_tokens[0] == x + 1:
-                white_count += 1
-                temp_node.state["white"].remove(w_tokens)
-        for b_tokens in temp_node.state["black"]:
-            if b_tokens[0] == x + 1:
-                black_count += 1
-                temp_node.state["black"].remove(b_tokens)
-        if colour == "white":
-            temp_dict[x] = weights[x] * (white_count - black_count)
-        else:
-            temp_dict[x] = weights[x] * (black_count - white_count)
-    temp_sum = 0
-    
-    for keys in temp_dict:
-        temp_sum += temp_dict[keys]
-    
-    """
     temp_sum = 0
     w = [0,0,0,0,0,0,0,0,0,0,0,0]
     b = [0,0,0,0,0,0,0,0,0,0,0,0]
@@ -118,6 +107,9 @@ def evaluation(current_node,colour,weights):
     if colour == 'black' :
         temp_sum = -1*temp_sum
     
+    if current_node.action and current_node.action[0] == 'BOOM' :
+        temp_sum += 0.01
+        
     for ours in current_node.state[colour] :
         for theirs in current_node.state[other] :
             if adjacacent(ours, theirs) :
@@ -127,7 +119,7 @@ def evaluation(current_node,colour,weights):
     return temp_sum
 
 
-def reward(current_node,colour,weights,reward_s):
+def reward(current_node,colour,weights):
     if colour == "white":
         if(not current_node.state['black']) :
             
@@ -232,28 +224,71 @@ def state_search(current_node,colour,explode):
              
             n = current_node.state[colour][stack_num][0] 
             
-            # explode move
-            if explode == True:
-                boom_state = boom(current_node.state, stack_num, colour)
-                temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
-                listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
-                ## i think filtered boom is not functioning properly, as boom states result a lot less often when using it
-                ## also as this function calls for opponents moves too, doesn't record chain explosions
-            for i in range(1,n+1):
-                for j in range(1, n + 1) :
-                    # move up by ith tokens
-                    if in_bounds(current_node.state, stack_num, [i,0,j],colour) :
-                        listOfNodes.append(node_move(current_node, stack_num, [i,0,j],colour))
-                    # left i
-                    if in_bounds(current_node.state, stack_num, [i,-j,0],colour) :
-                        listOfNodes.append(node_move(current_node, stack_num, [i, -j, 0],colour))
-                    # right i
-                    if in_bounds(current_node.state, stack_num, [i,j,0],colour) :
-                        listOfNodes.append(node_move(current_node, stack_num, [i, j, 0],colour))
-                    # down i
-                    if in_bounds(current_node.state, stack_num, [i,0,-j],colour) :
-                        listOfNodes.append(node_move(current_node, stack_num, [i, 0, -j],colour))
-    #shuffling list of possible states so it doesnt always go for the first option
+            
+            # change the order depending on what colour given
+            if colour == 'black' :
+                for i in range(1,n+1):
+                    for j in range(1, n + 1) :
+                        # move up by ith tokens
+                        if in_bounds(current_node.state, stack_num, [i,0,j],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i,0,j],colour))
+                        # right i
+                        if in_bounds(current_node.state, stack_num, [i,j,0],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i, j, 0],colour))
+                        # left i
+                        if in_bounds(current_node.state, stack_num, [i,-j,0],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i, -j, 0],colour))
+                        # down i
+                        if in_bounds(current_node.state, stack_num, [i,0,-j],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i, 0, -j],colour))
+                if explode == True:
+                    boom_state = boom(current_node.state, stack_num, colour)
+                    temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
+                    listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
+            else :
+                # explode move
+                if explode == True:
+                    boom_state = boom(current_node.state, stack_num, colour)
+                    temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
+                    listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
+                for i in range(1,n+1):
+                    for j in range(1, n + 1) :
+                        # move up by ith tokens
+                        if in_bounds(current_node.state, stack_num, [i,0,j],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i,0,j],colour))
+                        # left i
+                        if in_bounds(current_node.state, stack_num, [i,-j,0],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i, -j, 0],colour))
+                        # right i
+                        if in_bounds(current_node.state, stack_num, [i,j,0],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i, j, 0],colour))
+                        # down i
+                        if in_bounds(current_node.state, stack_num, [i,0,-j],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i, 0, -j],colour))
+                            
+                            
+        ############### order white should be after testing -> get rid of shuffle and add reverse
+        """
+                for i in range(1,n+1):
+                    for j in range(1, n + 1) :
+                        # down i
+                        if in_bounds(current_node.state, stack_num, [i,0,-j],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i, 0, -j],colour))
+                        # left i
+                        if in_bounds(current_node.state, stack_num, [i,-j,0],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i, -j, 0],colour))
+                        # right i
+                        if in_bounds(current_node.state, stack_num, [i,j,0],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i, j, 0],colour))
+                        # move up by ith tokens
+                        if in_bounds(current_node.state, stack_num, [i,0,j],colour) :
+                            listOfNodes.append(node_move(current_node, stack_num, [i,0,j],colour))
+                if explode == True:
+                    boom_state = boom(current_node.state, stack_num, colour)
+                    temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
+                    listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
+        """
+            
     if colour == 'black' :
         listOfNodes.reverse()
     else :
@@ -263,17 +298,17 @@ def state_search(current_node,colour,explode):
 
 # we are maxPlayer hence starts with mPlayer = true, a = -1000, b = 1000
 # beta is the maximum score the minimizing player (opponent) can get
-def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights,reward_s) : 
+def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights) : 
     maxNum = 1000
     minNum = -1000
     
     if len(current_node.child) == 0 :
-        return reward(current_node, our_colour,weights,reward_s), current_node
+        return reward(current_node, our_colour,weights), current_node
     
     if maxPlayer:
         best = minNum
         for child in current_node.child :
-            val, temp = minimax(False, child, alpha, beta, our_colour,weights,reward_s)
+            val, temp = minimax(False, child, alpha, beta, our_colour,weights)
             if(val > best) :
                 best = val
                 best_node = child
@@ -286,7 +321,7 @@ def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights,reward_s) :
     else:
         best = maxNum
         for child in current_node.child :
-            val, temp = minimax(True, child, alpha, beta, our_colour,weights,reward_s)
+            val, temp = minimax(True, child, alpha, beta, our_colour,weights)
             if(val < best) :
                 best = val
                 best_node = child
@@ -317,12 +352,9 @@ def generateMoves(root, maxDepth, curDepth, colour, explode) :
     return 0
 
 
-# leafs an array of tuples: [(node, weight)...]
 # generate a fraction of our possible moves from a set of leaf nodes
-
-
 """
-def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, state_reward) :
+def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) :
     newLeafs = []
     returnLeafs = []
     if len(leafs) > 0 :
@@ -345,13 +377,15 @@ def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, 
                     leafs[i].child.remove(j[0])
                 returnLeafs += leafs[i].child
                 newLeafs = []
+                leafs[i][0].child = state_search(leafs[i][0], colour, explode)
+                for j in leafs[i][0].child :
+                    newLeafs.append((j, reward(j, colour, weights)))
             else :
                 break
     return returnLeafs, curSpace
-
-
 """
-def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, state_reward) :
+
+def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) :
     newLeafs = []
     returnLeafs = []
     oldLeafs = []
@@ -365,7 +399,7 @@ def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, 
                 
                 leafs[i].child = state_search(leafs[i], colour, explode)
                 for j in leafs[i].child :
-                    newLeafs.append((j, reward(j, colour, weights, state_reward)))
+                    newLeafs.append((j, reward(j, colour, weights)))
                 newLeafs.sort(key = lambda x: x[1], reverse = True)
                 if len(leafs[i].child)*fraction >= 2 :
                     oldLeafs += newLeafs[int(len(newLeafs)*fraction):]
@@ -380,7 +414,7 @@ def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, 
 
 
 
-def someTheirMoves(leafs, colour, curSpace, maxSpace, weights, state_reward) :
+def someTheirMoves(leafs, colour, curSpace, maxSpace) :
     newLeafs = []
     #print("new call")
     if len(leafs) > 0 :
@@ -391,7 +425,6 @@ def someTheirMoves(leafs, colour, curSpace, maxSpace, weights, state_reward) :
                 i.child = state_search(i, colour, True)
                 for j in i.child :
                     newLeafs.append(j)
-                    #print(f"opponent: {colour} {j.action}")
             else :
                 break
     return newLeafs, curSpace

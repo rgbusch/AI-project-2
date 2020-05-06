@@ -30,7 +30,6 @@ class Tree:
     def getLeafNodes(self, node, leafs, colour, weights) :
         if node is not None :
             if len(node.child) == 0 :
-                #leafs.append((node, pf.reward(node, colour, weights,state_reward))) # change to append weight too
                 leafs.append(node)
             for n in node.child :
                 self.getLeafNodes(n, leafs, colour, weights)
@@ -69,23 +68,31 @@ class Player:
 
     def action(self):
         
-        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights,state_reward)
+        score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
         state_reward.append(score)
-        print(score)
         return best_node.action
         
 
-
+#################### NOTES ###################
+# BOOM move should provide ~+0.01 to a move, to encourage even trades ie. 2 stacks for 2 stacks
+# rewrite order in state_search depending on colour -> white should be BOOM, up, right/left, down
+#                                                   -> black should be BOOM, down, left/right, up
+##############################################
 
     def update(self, colour, action):
+        
         actionNotFound = True
         # look for given action in current tree, and assign new root
+        if colour != self.colour:
+            score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000,colour,self.minimax_tree.weights)
+            state_reward.append(score)
         
         if len(self.minimax_tree.root.child) > 0 :
             for node in self.minimax_tree.root.child :
                 if(node.action == action) :
                     self.minimax_tree.root = node
                     actionNotFound = False
+        
         # if action not found, recreate tree using root + action
         # if starting as black, this will always occur after first white action
         if actionNotFound :
@@ -100,7 +107,6 @@ class Player:
             self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, move, colour)
             pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
 
-
         if colour != self.colour :
             curNodes = 1
             maxNodes = 16000
@@ -114,11 +120,15 @@ class Player:
                         fraction = 1/(8*count1) ##doesn't work well for low stacks. have closer to 1 for low stacks
                     else :
                         fraction = 1/3
-                leafs, curNodes = pf.someOurMoves(leafs, self.colour, True, curNodes, maxNodes, fraction, self.minimax_tree.weights, state_reward)
+                leafs, curNodes = pf.someOurMoves(leafs, self.colour, True, curNodes, maxNodes, fraction, self.minimax_tree.weights)
                 if curNodes > maxNodes :
                     break
-                leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes, self.minimax_tree.weights, state_reward)
-                
-            score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights, state_reward)
+                leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes)
+    
+            score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
             state_reward.append(score)
-
+        
+        # checks if the game state after updating has the game completed, if completed, update the weight
+        if pf.game_evaluation(self.minimax_tree.root,colour) == True:
+            pf.weight_update(state_reward,0.1,1,self.minimax_tree.weights)
+        
