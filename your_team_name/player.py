@@ -30,7 +30,8 @@ class Tree:
     def getLeafNodes(self, node, leafs, colour, weights) :
         if node is not None :
             if len(node.child) == 0 :
-                leafs.append((node, pf.reward(node, colour, weights,state_reward))) # change to append weight too
+                #leafs.append((node, pf.reward(node, colour, weights,state_reward))) # change to append weight too
+                leafs.append(node)
             for n in node.child :
                 self.getLeafNodes(n, leafs, colour, weights)
 
@@ -66,11 +67,11 @@ class Player:
         if colour == "white" :
             pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False) 
 
-
     def action(self):
         
         score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights,state_reward)
         state_reward.append(score)
+        print(score)
         return best_node.action
         
 
@@ -97,27 +98,27 @@ class Player:
                     move[1] = action[3][0] - action[2][0]
                     move[2] = action[3][1] - action[2][1]
             self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, move, colour)
-            
             pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
 
-        curNodes = 1
-        maxNodes = 16000
-        leafs = [(self.minimax_tree.root, 0)]
-        fraction = 1
-        count1 = 0
+
         if colour != self.colour :
-            while curNodes < maxNodes and count1 < 8: ## have to generate all our first moves, as minimax sometimes picks one not further explored
-                if count1 > 0 :
-                    fraction = 1/32
-                count1 += 1
+            curNodes = 1
+            maxNodes = 16000
+            fraction = 1
+            count1 = 0
+            leafs = [self.minimax_tree.root]
+            while curNodes < maxNodes and count1 < 8 :
+                count1+= 1
+                if count1 > 1 :
+                    if pf.branch_approximation(self.minimax_tree.root, self.colour) > 30 :
+                        fraction = 1/(8*count1) ##doesn't work well for low stacks. have closer to 1 for low stacks
+                    else :
+                        fraction = 1/3
                 leafs, curNodes = pf.someOurMoves(leafs, self.colour, True, curNodes, maxNodes, fraction, self.minimax_tree.weights, state_reward)
-                # use this if to make faster at start of game
-                if len(leafs) == 0 or (pf.branch_approximation(leafs[0][0], colour) > 50 and count1 > 1) :
-                    break
                 if curNodes > maxNodes :
                     break
                 leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes, self.minimax_tree.weights, state_reward)
                 
             score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights, state_reward)
             state_reward.append(score)
-        
+

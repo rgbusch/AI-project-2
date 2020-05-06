@@ -14,3 +14,13 @@ referee/__pycache__/game.cpython-36.pyc
 referee/__pycache__/__main__.cpython-36.pyc
 referee/__pycache__/game.cpython-36.pyc
 referee/__pycache__/log.cpython-36.pyc
+*.pyc
+referee/__pycache__/__main__.cpython-36.pyc
+referee/__pycache__/game.cpython-36.pyc
+referee/__pycache__/log.cpython-36.pyc
+referee/__pycache__/options.cpython-36.pyc
+referee/__pycache__/player.cpython-36.pyc
+your_team_name/__pycache__/__init__.cpython-36.pyc
+your_team_name/__pycache__/player.cpython-36.pyc
+your_team_name/__pycache__/player_functions.cpython-36.pyc
+*.pyc

@@ -76,7 +76,7 @@ def branch_approximation(current_node,colour):
 
 
 def evaluation(current_node,colour,weights):
-
+    """
     temp_dict = {}
     temp_node = copy.deepcopy(current_node)
     for x in range(len(weights)):
@@ -98,20 +98,31 @@ def evaluation(current_node,colour,weights):
     
     for keys in temp_dict:
         temp_sum += temp_dict[keys]
+    
+    """
+    temp_sum = 0
+    w = [0,0,0,0,0,0,0,0,0,0,0,0]
+    b = [0,0,0,0,0,0,0,0,0,0,0,0]
+    for x in current_node.state['white'] :
+        w[x[0]-1] += 1
+    for x in current_node.state['black'] :
+        b[x[0]-1] += 1
+    
     if colour == 'white' :
         other = 'black'
     else :
         other = 'white'
-    # done so that
-    done = False
+    
+    for x in range(len(weights)) :
+        temp_sum += weights[x] * (w[x] - b[x])
+    if colour == 'black' :
+        temp_sum = -1*temp_sum
+    
     for ours in current_node.state[colour] :
         for theirs in current_node.state[other] :
             if adjacacent(ours, theirs) :
                 temp_sum += 0.2
-                done = True
-                break
-        if done :
-            break
+                return temp_sum
     
     return temp_sum
 
@@ -228,18 +239,6 @@ def state_search(current_node,colour,explode):
                 listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
                 ## i think filtered boom is not functioning properly, as boom states result a lot less often when using it
                 ## also as this function calls for opponents moves too, doesn't record chain explosions
-                """
-                #reducing branching factor by checking if there are any other opponent's tokens within explosion range
-                #explosion states creation would be unnessary if it doesnt destroy enemy tokens
-                for x in range(current_node.state[colour][stack_num][1]-1,current_node.state[colour][stack_num][1]+2):
-                    for y in range(current_node.state[colour][stack_num][2]-1,current_node.state[colour][stack_num][2]+2):
-                        if (current_node.state[opp_colour]):
-                            for tokens in current_node.state[opp_colour]:
-                                if tokens[1] == x and tokens[2] == y:
-                                    boom_state = boom(current_node.state, stack_num, colour)
-                                    temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
-                                    listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
-                """
             for i in range(1,n+1):
                 for j in range(1, n + 1) :
                     # move up by ith tokens
@@ -255,7 +254,10 @@ def state_search(current_node,colour,explode):
                     if in_bounds(current_node.state, stack_num, [i,0,-j],colour) :
                         listOfNodes.append(node_move(current_node, stack_num, [i, 0, -j],colour))
     #shuffling list of possible states so it doesnt always go for the first option
-    random.shuffle(listOfNodes)
+    if colour == 'black' :
+        listOfNodes.reverse()
+    else :
+        random.shuffle(listOfNodes)
     return listOfNodes
 
 
@@ -317,31 +319,83 @@ def generateMoves(root, maxDepth, curDepth, colour, explode) :
 
 # leafs an array of tuples: [(node, weight)...]
 # generate a fraction of our possible moves from a set of leaf nodes
+
+
+"""
 def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, state_reward) :
     newLeafs = []
+    returnLeafs = []
     if len(leafs) > 0 :
         for i in range(len(leafs)) :
-            curSpace += branch_approximation(leafs[i][0], colour)
+            if len(newLeafs)*fraction >= 2 :
+                curSpace += int(branch_approximation(leafs[i], colour)*fraction)
+            else :
+                curSpace += branch_approximation(leafs[i], colour)
             if curSpace <= maxSpace :
-                leafs[i][0].child = state_search(leafs[i][0], colour, explode)
-                for j in leafs[i][0].child :
+                
+                leafs[i].child = state_search(leafs[i], colour, explode)
+                for j in leafs[i].child :
                     newLeafs.append((j, reward(j, colour, weights, state_reward)))
+                newLeafs.sort(key = lambda x: x[1], reverse = True)
+                if len(newLeafs)*fraction >= 2 :
+                    oldLeafs = newLeafs[int(len(newLeafs)*fraction):]
+                else :
+                    oldLeafs = []
+                for j in oldLeafs :
+                    leafs[i].child.remove(j[0])
+                returnLeafs += leafs[i].child
+                newLeafs = []
             else :
                 break
-    # now choose fraction of our moves to return
-    newLeafs.sort(key = lambda x: x[1])
-    return newLeafs[:int(len(newLeafs)*fraction)], curSpace
+    return returnLeafs, curSpace
+
+
+"""
+def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights, state_reward) :
+    newLeafs = []
+    returnLeafs = []
+    oldLeafs = []
+    if len(leafs) > 0 :
+        for i in range(len(leafs)) :
+            if len(newLeafs)*fraction >= 2 :
+                curSpace += int(branch_approximation(leafs[i], colour)*fraction)
+            else :
+                curSpace += branch_approximation(leafs[i], colour)
+            if curSpace <= maxSpace :
+                
+                leafs[i].child = state_search(leafs[i], colour, explode)
+                for j in leafs[i].child :
+                    newLeafs.append((j, reward(j, colour, weights, state_reward)))
+                newLeafs.sort(key = lambda x: x[1], reverse = True)
+                if len(leafs[i].child)*fraction >= 2 :
+                    oldLeafs += newLeafs[int(len(newLeafs)*fraction):]
+                newLeafs = []
+            else :
+                break
+    for i in oldLeafs :
+        del(i)
+    for i in leafs :
+        returnLeafs += i.child
+    return returnLeafs, curSpace
+
+
 
 def someTheirMoves(leafs, colour, curSpace, maxSpace, weights, state_reward) :
     newLeafs = []
+    #print("new call")
     if len(leafs) > 0 :
         for i in leafs :
-            curSpace += branch_approximation(i[0], colour)
+            curSpace += branch_approximation(i, colour)
             if curSpace <= maxSpace :
-                i[0].child = state_search(i[0], colour, True)
-                for j in i[0].child :
-                    newLeafs.append((j, reward(j, colour, weights, state_reward)))
+                #if len(i[0].child) == 0 :
+                i.child = state_search(i, colour, True)
+                for j in i.child :
+                    newLeafs.append(j)
+                    #print(f"opponent: {colour} {j.action}")
             else :
                 break
     return newLeafs, curSpace
-    
+
+
+
+
