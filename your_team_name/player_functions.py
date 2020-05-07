@@ -26,6 +26,38 @@ def game_evaluation(current_node,colour):
                 hasCompleted = False
     return hasCompleted
 
+def weight_update(evaluation_score,learning_rate,lamda,weight):
+    sum_weights = sum(weight)
+    return_weight = []
+
+    total_sum = 0
+    for y in range(len(evaluation_score)-1):
+        second_part = 0
+        for z in range(y,len(evaluation_score)-1):
+            second_part += m.pow(lamda,(z-y)) * (evaluation_score[y+1]-evaluation_score[y])
+        
+        #as evaluation function = f(s) * w, the derivative of the evaluation would just be f(s)
+        derivative = evaluation_score[y]/sum_weights
+        combined = derivative * second_part
+        total_sum += combined
+        
+    print("===================")
+    print(total_sum)    
+    
+    for w in weight:
+        return_weight.append(w + total_sum)
+        
+    f = open("your_team_name/weights.txt","w+")
+    temp_str = ""
+    for w in return_weight:
+        if w != return_weight[-1]:
+            temp_str += (str(w) + ",")
+        else:
+            temp_str += (str(w))
+    f.write(temp_str)
+    f.close()
+
+'''
 def weight_update(reward_score,learning_rate,lamda,weight):
 
     sum_weights = sum(weight)
@@ -55,7 +87,7 @@ def weight_update(reward_score,learning_rate,lamda,weight):
     total_sum = total_sum * learning_rate
 
     for w in weight:
-        return_weight.append(w + total_sum)
+        return_weight.append(abs(w + total_sum))
 
     f = open("your_team_name/weights.txt","w+")
     temp_str = ""
@@ -66,7 +98,7 @@ def weight_update(reward_score,learning_rate,lamda,weight):
             temp_str += (str(w))
     f.write(temp_str)
     f.close()
-
+'''
 
 
 
@@ -303,7 +335,8 @@ def minimax(maxPlayer, current_node, alpha, beta, our_colour,weights) :
     minNum = -1000
     
     if len(current_node.child) == 0 :
-        return reward(current_node, our_colour,weights), current_node
+        
+        return reward(current_node,our_colour,weights), current_node
     
     if maxPlayer:
         best = minNum

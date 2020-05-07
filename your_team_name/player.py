@@ -1,7 +1,7 @@
 import math as m
 from your_team_name import player_functions as pf
 
-state_reward = []
+state_evaluation = []
 
 class Node:
     def __init__(self,state=None,child = [],action = None,move = None,depth = None):
@@ -69,7 +69,11 @@ class Player:
     def action(self):
         
         score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
-        state_reward.append(score)
+        if score == 1: 
+            score = score - 0.0000001
+        elif score == -1:
+            score = score + 0.0000001
+        state_evaluation.append(m.atanh(score))
         return best_node.action
         
 
@@ -83,9 +87,6 @@ class Player:
         
         actionNotFound = True
         # look for given action in current tree, and assign new root
-        if colour != self.colour:
-            score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000,colour,self.minimax_tree.weights)
-            state_reward.append(score)
         
         if len(self.minimax_tree.root.child) > 0 :
             for node in self.minimax_tree.root.child :
@@ -134,11 +135,15 @@ class Player:
                 leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes)
     
             score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
-            state_reward.append(score)
+            if score == 1: 
+                score = score - 0.0000001
+            elif score == -1:
+                score = score + 0.0000001
+            state_evaluation.append(m.atanh(score))
         
         # checks if the game state after updating has the game completed, if completed, update the weight
         if colour == self.colour:
 
             if pf.game_evaluation(self.minimax_tree.root,colour) == True:
-                pf.weight_update(state_reward,0.1,1,self.minimax_tree.weights)
+                pf.weight_update(state_evaluation,0.1,1,self.minimax_tree.weights)
         
