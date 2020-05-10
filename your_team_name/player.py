@@ -69,11 +69,17 @@ class Player:
     def action(self):
         
         score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
+        
+        #Recording evaluation score of best leaf node
+        #arctangent applied to reverse reward score and 0.0000001 being added or subtracted due to
+        #range of arctangent function
+        '''
         if score == 1: 
             score = score - 0.0000001
         elif score == -1:
             score = score + 0.0000001
         state_evaluation.append(m.atanh(score))
+        '''
         return best_node.action
         
 
@@ -133,17 +139,23 @@ class Player:
                 if curNodes > maxNodes :
                     break
                 leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes)
-    
+            
+            #recording the evaluation score of the best leaf found at a given state
+            #Used for TDL weight updating
+            '''
             score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
             if score == 1: 
                 score = score - 0.0000001
             elif score == -1:
                 score = score + 0.0000001
             state_evaluation.append(m.atanh(score))
-        
-        # checks if the game state after updating has the game completed, if completed, update the weight
-        if colour == self.colour:
+            '''
 
+        #weight updating attempted at the end of a game 
+        #Discarded as weight becomes negatively large after update.
+        '''
+        if colour == self.colour:
             if pf.game_evaluation(self.minimax_tree.root,colour) == True:
                 pf.weight_update(state_evaluation,0.1,1,self.minimax_tree.weights)
+        '''
         
