@@ -1,16 +1,14 @@
 import math as m
 from your_team_name import player_functions as pf
+import gc
 
 state_evaluation = []
 
 class Node:
-    def __init__(self,state=None,child = [],action = None,move = None,depth = None):
-
+    def __init__(self,state=None,child = [],action = None):
         self.state = state 
         self.child = child
-        self.move = move
         self.action = action
-        self.depth = depth
     
     def hasChild(self):
         return self.child
@@ -41,6 +39,7 @@ class Player:
         
         self.colour = colour
         self.count = 0
+        """
         f = open("your_team_name/weights.txt","r")
         
         temp_str = f.read()
@@ -48,6 +47,9 @@ class Player:
         for w in range(len(weights)):
             weights[w] = float(weights[w])
         f.close()
+        """
+
+        weights = [1.0,1.9230769230769231,2.8461538461538463,3.769230769230769,4.6923076923076925,5.615384615384615,6.538461538461538,7.461538461538462,8.384615384615385,9.307692307692308,10.23076923076923,11.153846153846153]
 
         initial_state = {"white":[],"black":[]}
         for i in range(8) :
@@ -58,13 +60,13 @@ class Player:
                     initial_state["black"].append([1,i,k])
 
 
-        root_node = Node(initial_state,depth=0)
+        root_node = Node(initial_state)
         minimax_tree = Tree(root_node,0,2, weights = weights)
         self.minimax_tree = minimax_tree
         
         #if we start as white, generate moveset here  
         if colour == "white" :
-            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False) 
+            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False)
 
     def action(self):
         
@@ -82,12 +84,7 @@ class Player:
         '''
         return best_node.action
         
-
-#################### NOTES ###################
-# BOOM move should provide ~+0.01 to a move, to encourage even trades ie. 2 stacks for 2 stacks
-# rewrite order in state_search depending on colour -> white should be BOOM, up, right/left, down
-#                                                   -> black should be BOOM, down, left/right, up
-##############################################
+        
 
     def update(self, colour, action):
         
@@ -102,7 +99,6 @@ class Player:
         
         # if action not found, recreate tree using root + action
         # if starting as black, this will always occur after first white action
-        boom = False
         if actionNotFound :
             #print(self.minimax_tree.root.state) ## add checking for boom action
             if action[0] == 'BOOM' :
@@ -124,21 +120,36 @@ class Player:
 
         if colour != self.colour :
             curNodes = 1
-            maxNodes = 16000
+            maxNodes = 10000
             fraction = 1
-            count1 = 0
+            count = 1
+            depth = 0
             leafs = [self.minimax_tree.root]
-            while curNodes < maxNodes and count1 < 8 :
-                count1+= 1
-                if count1 > 1 :
-                    if pf.branch_approximation(self.minimax_tree.root, self.colour) > 30 :
-                        fraction = 1/(8*count1) ##doesn't work well for low stacks. have closer to 1 for low stacks
-                    else :
-                        fraction = 1/3
+            self.minimax_tree.root.child = []
+            
+            while curNodes < maxNodes and depth < 8 : ## white updating blacks first move gives > 100MB
+                # if at depth 2, fraction to ~4-7 nodes per state
+                if depth > 0 : 
+                    temp = pf.branch_approximation(self.minimax_tree.root, self.colour)
+                    if temp >= 60 :
+                        fraction = 1/15
+                    elif temp >= 40 :
+                        fraction = 1/10 ## change for start of game
+                    elif temp >= 20 :
+                        maxNodes = 14000
+                        fraction = 1/5
+                    else:
+                        fraction = 1
+                    # only generate moves if can also generate some opponents moves
+                    if curNodes + pf.branch_approximation(self.minimax_tree.root, self.colour)*fraction * pf.branch_approximation(self.minimax_tree.root, colour) > maxNodes :
+                        break
+                
                 leafs, curNodes = pf.someOurMoves(leafs, self.colour, True, curNodes, maxNodes, fraction, self.minimax_tree.weights)
+                depth += 1
                 if curNodes > maxNodes :
                     break
                 leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes)
+                depth += 1
             
             #recording the evaluation score of the best leaf found at a given state
             #Used for TDL weight updating
