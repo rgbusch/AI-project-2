@@ -27,3 +27,7 @@ your_team_name/__pycache__/player_functions.cpython-36.pyc
 your_team_name/__pycache__/player_functions.cpython-36.pyc
 your_team_name/__pycache__/player.cpython-36.pyc
 your_team_name/__pycache__/__init__.cpython-36.pyc
+battleground/__main__.py
+battleground/options.py
+battleground/protocol.py
+.pydevproject
