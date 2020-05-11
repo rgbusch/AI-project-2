@@ -137,7 +137,7 @@ def evaluation(current_node,colour,weights, ourTurn):
         temp_sum = -1*temp_sum
     
     if ourTurn and current_node.action and current_node.action[0] == 'BOOM' :
-        temp_sum += 0.02
+        temp_sum += 0.1
         
     for ours in current_node.state[colour] :
         for theirs in current_node.state[other] :
@@ -275,32 +275,6 @@ def state_search(current_node,colour,explode):
                     temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
                     listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
             else :
-                # explode move
-                
-                
-                """
-                if explode == True:
-                    boom_state = boom(current_node.state, stack_num, colour)
-                    temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
-                    listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
-                for i in range(1,n+1):
-                    for j in range(1, n + 1) :
-                        # move up by ith tokens
-                        if in_bounds(current_node.state, stack_num, [i,0,j],colour) :
-                            listOfNodes.append(node_move(current_node, stack_num, [i,0,j],colour))
-                        # left i
-                        if in_bounds(current_node.state, stack_num, [i,-j,0],colour) :
-                            listOfNodes.append(node_move(current_node, stack_num, [i, -j, 0],colour))
-                        # right i
-                        if in_bounds(current_node.state, stack_num, [i,j,0],colour) :
-                            listOfNodes.append(node_move(current_node, stack_num, [i, j, 0],colour))
-                        # down i
-                        if in_bounds(current_node.state, stack_num, [i,0,-j],colour) :
-                            listOfNodes.append(node_move(current_node, stack_num, [i, 0, -j],colour))
-                            
-                            
-        ############### order white should be after testing -> get rid of shuffle and add reverse
-        """
                 for i in range(1,n+1):
                     for j in range(1, n + 1) :
                         # down i
@@ -319,14 +293,8 @@ def state_search(current_node,colour,explode):
                     boom_state = boom(current_node.state, stack_num, colour)
                     temp_action = ("BOOM",(current_node.state[colour][stack_num][1],current_node.state[colour][stack_num][2]))
                     listOfNodes.append(Node(state = boom_state,child = [],action = temp_action))
-        
+
     listOfNodes.reverse()
-    """
-    if colour == 'black' :
-        listOfNodes.reverse()
-    else :
-        random.shuffle(listOfNodes)
-    """
     return listOfNodes
 
 
@@ -366,6 +334,7 @@ def minimax(maxPlayer, current_node, alpha, beta, ourColour,weights) :
         return best, best_node
 
 
+
 def generateMoves(root, maxDepth, curDepth, colour, explode) :
     curNode = root
     if colour == 'white' :
@@ -387,35 +356,6 @@ def generateMoves(root, maxDepth, curDepth, colour, explode) :
 
 
 # generate a fraction of our possible moves from a set of leaf nodes
-"""
-def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) :
-    newLeafs = []
-    returnLeafs = []
-    if len(leafs) > 0 :
-        for i in range(len(leafs)) :
-            if len(newLeafs)*fraction >= 2 :
-                curSpace += int(branch_approximation(leafs[i], colour)*fraction)
-            else :
-                curSpace += branch_approximation(leafs[i], colour)
-            if curSpace <= maxSpace :
-                
-                leafs[i].child = state_search(leafs[i], colour, explode)
-                for j in leafs[i].child :
-                    newLeafs.append((j, reward(j, colour, weights)))
-                newLeafs.sort(key = lambda x: x[1], reverse = True)
-                if len(newLeafs)*fraction >= 2 :
-                    oldLeafs = newLeafs[int(len(newLeafs)*fraction):]
-                else :
-                    oldLeafs = []
-                for j in oldLeafs :
-                    leafs[i].child.remove(j[0])
-                returnLeafs += leafs[i].child
-                newLeafs = []
-            else :
-                break
-    return returnLeafs, curSpace
-"""
-
 def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) :
     newLeafs = []
     returnLeafs = []
@@ -443,32 +383,6 @@ def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) 
         returnLeafs += i.child
     return returnLeafs, curSpace
 
-
-"""
-#keeps record of all possible children generated (references) and returns a fraction of them
-def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) :
-    newLeafs = []
-    returnLeafs = []
-    oldLeafs = []
-    tempSpace = 0
-    if len(leafs) > 0 :
-        for i in range(len(leafs)) :
-            tempSpace += int(branch_approximation(leafs[i], colour))
-            if tempSpace + curSpace <= maxSpace :
-                leafs[i].child = state_search(leafs[i], colour, explode)
-                for j in leafs[i].child :
-                    newLeafs.append((j, reward(j, colour, weights)))
-            else :
-                break
-    newLeafs.sort(key = lambda x: x[1], reverse = True)
-    oldLeafs = newLeafs[int(len(newLeafs)*fraction):]
-    curSpace += tempSpace*fraction
-    for i in oldLeafs :
-        del(i)
-    for i in leafs :
-        returnLeafs += i.child
-    return returnLeafs, curSpace
-"""
 
 def someTheirMoves(leafs, colour, curSpace, maxSpace) :
     newLeafs = []

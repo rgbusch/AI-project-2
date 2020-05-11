@@ -50,7 +50,6 @@ class Player:
         """
 
         weights = [1.0,1.9230769230769231,2.8461538461538463,3.769230769230769,4.6923076923076925,5.615384615384615,6.538461538461538,7.461538461538462,8.384615384615385,9.307692307692308,10.23076923076923,11.153846153846153]
-
         initial_state = {"white":[],"black":[]}
         for i in range(8) :
             if i != 2 and i != 5:
@@ -71,7 +70,7 @@ class Player:
     def action(self):
         
         score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
-        
+
         #Recording evaluation score of best leaf node
         #arctangent applied to reverse reward score and 0.0000001 being added or subtracted due to
         #range of arctangent function
@@ -90,7 +89,6 @@ class Player:
         
         actionNotFound = True
         # look for given action in current tree, and assign new root
-        
         if len(self.minimax_tree.root.child) > 0 :
             for node in self.minimax_tree.root.child :
                 if(node.action == action) :
@@ -100,7 +98,6 @@ class Player:
         # if action not found, recreate tree using root + action
         # if starting as black, this will always occur after first white action
         if actionNotFound :
-            #print(self.minimax_tree.root.state) ## add checking for boom action
             if action[0] == 'BOOM' :
                 pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
                 if len(self.minimax_tree.root.child) > 0 :
@@ -120,21 +117,22 @@ class Player:
 
         if colour != self.colour :
             curNodes = 1
-            maxNodes = 10000
+            # the first few moves in the program seem to take more memory than calculated, so set to 10000
+            maxNodes = 10000 
             fraction = 1
             count = 1
             depth = 0
             leafs = [self.minimax_tree.root]
             self.minimax_tree.root.child = []
             
-            while curNodes < maxNodes and depth < 8 : ## white updating blacks first move gives > 100MB
+            while curNodes < maxNodes and depth < 10 :
                 # if at depth 2, fraction to ~4-7 nodes per state
                 if depth > 0 : 
                     temp = pf.branch_approximation(self.minimax_tree.root, self.colour)
                     if temp >= 60 :
                         fraction = 1/15
                     elif temp >= 40 :
-                        fraction = 1/10 ## change for start of game
+                        fraction = 1/10
                     elif temp >= 20 :
                         maxNodes = 14000
                         fraction = 1/5
