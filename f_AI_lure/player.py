@@ -1,90 +1,37 @@
 import math as m
 from f_AI_lure import player_functions as pf
-import gc
 
 state_evaluation = []
 
 class Node:
-    def __init__(self,state=None,child = [],action = None):
+    def __init__(self, state=None,child = [], action = None):
         self.state = state 
         self.child = child
         self.action = action
-    
-    def hasChild(self):
-        return self.child
-
-    def insertChild(self,child_node):
-        self.child.append(child_node)
-
 
 
 class Tree:
-    def __init__(self,root = None,current_depth = None,depth = None,weights = None):
+    def __init__(self, root = None, weights = None):
         self.root = root
-        self.current_depth=current_depth
-        self.depth = depth
         self.weights = weights
-    
-    def getLeafNodes(self, node, leafs, colour, weights) :
-        if node is not None :
-            if len(node.child) == 0 :
-                leafs.append(node)
-            for n in node.child :
-                self.getLeafNodes(n, leafs, colour, weights)
-"""        if colour == "white" :
-            pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False)
-            
-        if colour == 'white' :
-            self.move = [("MOVE",1,(4,1),(3,1)), ("MOVE",2,(3,1),(3,3))] #[("MOVE",1,(7,1),(6,1)), ("MOVE",1,(6,0),(6,1))]
-        else :
-            self.move = [("MOVE",1,(7,6),(6,6)), ("MOVE",2,(6,6),(6,4))]
-
-    def getInitialMoves(self, previous_action, colour):
-        
-        x_loc = [0,1,3,4,6,7]
-        return_actions = []
-        if colour == 'black':
-            if previous_action[3][0] in [0,1]:
-                x_loc.remove(0)
-                x_loc.remove(1)
-            elif previous_action[3][0] in [3,4]:
-                x_loc.remove(3)
-                x_loc.remove(4)
-            else:
-                x_loc.remove(6)
-                x_loc.remove(7)
-        for x in x_loc:
-            if colour == 'white' :
-                return_actions.append(("MOVE",1,(x,0),(x,1)))
-            else :
-                return_actions.append(("MOVE",1,(x,7),(x,6)))
-        random.shuffle(return_actions)
-        return return_actions[0]
-        
-        if colour == 'white' :
-            return [("MOVE",1,(3,0),(3,1)), ("MOVE",2,(3,1),(3,1))]
-        else :
-            return [("MOVE",1,(4,7),(4,6)), ("MOVE",2,(4,6),(4,4))]
-            """
 
 
 class Player:
     def __init__(self, colour):
         
         self.colour = colour
-        self.count = 0
         self.move = None
+        # used for weight update, save (tiny amount) time by just creating array of values
         """
         f = open("your_team_name/weights.txt","r")
-        
         temp_str = f.read()
         weights = temp_str.strip().split(",")
         for w in range(len(weights)):
             weights[w] = float(weights[w])
         f.close()
         """
-        #1.9230769230769231
         weights = [1.0,1.9230769230769231,2.8461538461538463,3.769230769230769,4.6923076923076925,5.615384615384615,6.538461538461538,7.461538461538462,8.384615384615385,9.307692307692308,10.23076923076923,11.153846153846153]
+        # create initial state
         initial_state = {"white":[],"black":[]}
         for i in range(8) :
             if i != 2 and i != 5:
@@ -92,42 +39,41 @@ class Player:
                     initial_state["white"].append([1,i,j])
                 for k in range(6,8):
                     initial_state["black"].append([1,i,k])
-
-
         root_node = Node(initial_state)
-        minimax_tree = Tree(root_node,0,2, weights = weights)
+        minimax_tree = Tree(root_node, weights = weights)
         self.minimax_tree = minimax_tree
         
-        #if we start as white, generate moveset here  
+        # if we start as white, generate basic tree here
+        # also define opening moves for each colour here
         if colour == "white" :
             pf.generateMoves(self.minimax_tree.root, 2, 0, colour, False)
             if colour == 'white' :
-                self.move = [("MOVE",1,(4,1),(3,1)), ("MOVE",2,(3,1),(3,3))] #[("MOVE",1,(7,1),(6,1)), ("MOVE",1,(6,0),(6,1))]
+                self.move = [("MOVE",1,(4,1),(3,1)), ("MOVE",2,(3,1),(3,3))]
         else :
             self.move = [("MOVE",1,(7,6),(6,6)), ("MOVE",2,(6,6),(6,4))]
 
+
     def action(self):
+        # if an opening move, return from list
+        if len(self.move) > 0 :
+            return self.move.pop(0)
         
+        # apply minimax to get the next move
         score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
 
-        #Recording evaluation score of best leaf node
-        #arctangent applied to reverse reward score and 0.0000001 being added or subtracted due to
-        #range of arctangent function
-        '''
+        # recording evaluation score of best leaf node
+        # arctangent applied to reverse reward score and 0.0000001 being added or subtracted due to range of arctangent function
+        """
         if score == 1: 
             score = score - 0.0000001
         elif score == -1:
             score = score + 0.0000001
         state_evaluation.append(m.atanh(score))
-        '''
-        if len(self.move) > 0 :
-            return self.move.pop(0)
+        """
         return best_node.action
-        
-        
+
 
     def update(self, colour, action):
-        
         actionNotFound = True
         # look for given action in current tree, and assign new root
         if len(self.minimax_tree.root.child) > 0 :
@@ -155,56 +101,59 @@ class Player:
                         move[2] = action[3][1] - action[2][1]
                 self.minimax_tree.root = pf.node_move(self.minimax_tree.root, stack_num, move, colour)
             pf.generateMoves(self.minimax_tree.root, 2, 0, self.colour, True)
-
+        
+        # if an opening move, don't generate tree
+        if len(self.move) > 0 :
+            return
+        
+        # if the last move was opponents (our move next) generate the tree
         if colour != self.colour :
             curNodes = 1
             # the first few moves in the program seem to take more memory than calculated, so set to 10000
             maxNodes = 12000 
             fraction = 1
-            count = 1
             depth = 0
             leafs = [self.minimax_tree.root]
             self.minimax_tree.root.child = []
             
-            while curNodes < maxNodes and depth < 10 :
+            while curNodes < maxNodes and depth < 14 :
                 # if at depth 2, fraction to ~4-7 nodes per state
                 if depth > 0 : 
                     temp = pf.branch_approximation(self.minimax_tree.root, self.colour)
-                    if temp >= 60 :
-                        fraction = 1/5
-                    elif temp >= 40 :
-                        fraction = 1/4
+                    if temp >= 60 : # rarely gets here
+                        fraction = 4/10
+                    elif temp >= 40 : # usually here
+                        fraction = 6/10
                     elif temp >= 20 :
                         maxNodes = 14000
-                        fraction = 1
+                        fraction = 8/10
                     else:
                         fraction = 1
                     # only generate moves if can also generate some opponents moves
                     if curNodes + pf.branch_approximation(self.minimax_tree.root, self.colour)*fraction * pf.branch_approximation(self.minimax_tree.root, colour) > maxNodes :
                         break
-                
                 leafs, curNodes = pf.someOurMoves(leafs, self.colour, True, curNodes, maxNodes, fraction, self.minimax_tree.weights)
                 depth += 1
                 if curNodes > maxNodes :
                     break
                 leafs, curNodes = pf.someTheirMoves(leafs, colour, curNodes, maxNodes, self.minimax_tree.weights)
                 depth += 1
-            #recording the evaluation score of the best leaf found at a given state
-            #Used for TDL weight updating
-            '''
+                
+            # recording the evaluation score of the best leaf found at a given state
+            # used for TDL weight updating
+            """
             score,best_node = pf.minimax(True, self.minimax_tree.root, -1000, 1000, self.colour,self.minimax_tree.weights)
             if score == 1: 
                 score = score - 0.0000001
             elif score == -1:
                 score = score + 0.0000001
             state_evaluation.append(m.atanh(score))
-            '''
-
-        #weight updating attempted at the end of a game 
-        #Discarded as weight becomes negatively large after update.
-        '''
+            """
+        # weight updating attempted at the end of a game 
+        # discarded as weight becomes negatively large after update.
+        """
         if colour == self.colour:
             if pf.game_evaluation(self.minimax_tree.root,colour) == True:
                 pf.weight_update(state_evaluation,0.1,1,self.minimax_tree.weights)
-        '''
+        """
         

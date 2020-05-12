@@ -1,7 +1,6 @@
 import copy 
 from cmath import sqrt
 import math as m
-
 import random
 
 class Node:
@@ -10,7 +9,8 @@ class Node:
         self.child = child
         self.action = action
 
-
+# commented code below used for weight update in TDL machine learning
+"""
 def game_evaluation(current_node,colour):
     hasCompleted = True
     if colour == "white":
@@ -23,11 +23,13 @@ def game_evaluation(current_node,colour):
                 hasCompleted = False
     return hasCompleted
 
+
+# second version of weight update
 def weight_update(evaluation_score,learning_rate,lamda,weight):
     sum_weights = sum(weight)
     return_weight = []
-
     total_sum = 0
+    
     for y in range(len(evaluation_score)-1):
         second_part = 0
         for z in range(y,len(evaluation_score)-1):
@@ -54,13 +56,13 @@ def weight_update(evaluation_score,learning_rate,lamda,weight):
     f.write(temp_str)
     f.close()
 
-'''
-def weight_update(reward_score,learning_rate,lamda,weight):
 
+# first version of weight update
+def weight_update(reward_score,learning_rate,lamda,weight):
     sum_weights = sum(weight)
     return_weight = []
-
     total_sum = 0
+    
     for y in range(len(reward_score)-1):
         second_part = 0
         for z in range(y,len(reward_score)-1):
@@ -95,7 +97,7 @@ def weight_update(reward_score,learning_rate,lamda,weight):
             temp_str += (str(w))
     f.write(temp_str)
     f.close()
-'''
+"""
 
 
 
@@ -297,9 +299,11 @@ def state_search(current_node,colour,explode):
     listOfNodes.reverse()
     return listOfNodes
 
-
+##################################################################################################
+# minimax with alpha beta pruning adapted from Akshay L Aradhya at
+# https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning/
+##################################################################################################
 # we are maxPlayer hence starts with mPlayer = true, a = -1000, b = 1000
-# beta is the maximum score the minimizing player (opponent) can get
 def minimax(maxPlayer, current_node, alpha, beta, ourColour,weights) : 
     maxNum = 1000
     minNum = -1000
@@ -355,34 +359,6 @@ def generateMoves(root, maxDepth, curDepth, colour, explode) :
     return 0
 
 
-# don't fraction, only consider positive moves
-def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) :
-    newLeafs = []
-    returnLeafs = []
-    tempSpace = 0
-    if len(leafs) > 0 :
-        for i in range(len(leafs)) :
-            tempSpace += branch_approximation(leafs[i], colour)
-            if tempSpace + curSpace <= maxSpace :
-                leafs[i].child = state_search(leafs[i], colour, explode)
-                for j in leafs[i].child :
-                    if fraction != 1 and reward(j, colour, weights, True) <= 0 :
-                        leafs[i].child.remove(j)
-                        tempSpace-=1
-                    else :
-                        returnLeafs.append(j)
-            else :
-                break
-            
-    curSpace += tempSpace
-    if len(returnLeafs) > 1000 :
-        return returnLeafs[:1000], curSpace
-    return returnLeafs, curSpace
-    
-    
-    
-
-"""
 # generate a fraction of our possible moves from a set of leaf nodes
 def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) :
     newLeafs = []
@@ -396,7 +372,6 @@ def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) 
                 for j in leafs[i].child :
                     newLeafs.append((j, reward(j, colour, weights, True)))
                 newLeafs.sort(key = lambda x: x[1])
-                #print(newLeafs)
                 for k in range(int(len(newLeafs)-int(len(newLeafs)*fraction))) :
                     leafs[i].child.remove(newLeafs[k][0])
                     tempSpace -= 1
@@ -407,7 +382,7 @@ def someOurMoves(leafs, colour, explode, curSpace, maxSpace, fraction, weights) 
     for i in leafs :
         returnLeafs += i.child
     return returnLeafs, curSpace
-"""
+
 
 def someTheirMoves(leafs, colour, curSpace, maxSpace, weights) :
     newLeafs = []

@@ -7,18 +7,4 @@
 
 #from your_team_name.player import Player as Player
 from f_AI_lure.player import Player as Player
-import tracemalloc
 
-if __name__ == "__main__":
-    
-    tracemalloc.start()
-    
-    newPlayer = Player('white')
-    actions = newPlayer.action()
-    newPlayer.update('white', actions)
-    print(actions)
-    
-    current, peak = tracemalloc.get_traced_memory()
-    print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
-    tracemalloc.stop()
-    
